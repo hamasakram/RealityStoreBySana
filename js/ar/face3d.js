@@ -17,7 +17,7 @@ export class FaceRig {
     this.camera = new THREE.OrthographicCamera(0, 1, 0, -1, -10000, 10000);
     this.scene.add(new THREE.HemisphereLight(0xffffff, 0x30305a, 1.6));
     const key = new THREE.DirectionalLight(0xffffff, 2.2); key.position.set(0.4, 1, 1.2); this.scene.add(key);
-    const rim = new THREE.DirectionalLight(0xa894ff, 1.1); rim.position.set(-1, 0.3, -0.6); this.scene.add(rim);
+    const rim = new THREE.DirectionalLight(0xfff6ea, 0.7); rim.position.set(-1, 0.3, -0.6); this.scene.add(rim);
     this.anchor = new THREE.Group();            // follows the face
     this.anchor.matrixAutoUpdate = false;
     this.scene.add(this.anchor);
@@ -40,6 +40,7 @@ export class FaceRig {
     if (this.item) { this.anchor.remove(this.item); disposeTree(this.item); }
     this.kind = product.zone;           // 'head' | 'face'
     const tex = product.zone === 'head' && product.arTex ? loadTextures(product.arTex) : null;
+    this.model = product.model;
     this.item = product.zone === 'face' ? buildGlasses(product.model, colorHex, product.lens) : buildHat(product.model, colorHex, tex);
     this.anchor.add(this.item);
     this.layoutOccluder();
@@ -47,8 +48,9 @@ export class FaceRig {
   layoutOccluder() {
     // In face units (U = cheek-to-cheek width). Origin = midpoint of landmarks 234/454.
     // measured: forehead top y≈.62 z≈.50, chin y≈-.71, eye corners z≈.39, nose bridge z≈.56, cheek sides z≈0
-    this.occluder.position.set(0, 0.2, -0.08);
-    this.occluder.scale.set(0.5, 0.86, 0.58);
+    // skull: about 1.05 face-widths wide, 1.45 deep, crown ~0.95 above the cheek line
+    this.occluder.position.set(0, 0.14, -0.2);
+    this.occluder.scale.set(0.52, 0.84, 0.69);
   }
   // landmarks: array of {x,y,z} normalised to the video frame
   update(lms) {
@@ -90,7 +92,9 @@ export class FaceRig {
       } else {
         const inv = new THREE.Matrix4().copy(m).invert();
         const top = P(LM.top).applyMatrix4(inv);
-        this.item.position.set(top.x, top.y - 0.09 + this.fit.lift, -0.06);
+        const f = HAT_FIT[this.model] || HAT_FIT.beanie;
+        this.item.position.set(top.x, top.y + f.dy + this.fit.lift, f.z);
+        this.item.rotation.x = f.rx;      // negative = front of the band higher than the back (sits above the brows, covers the nape)
       }
       this.item.scale.setScalar(this.fit.scale);
     }
@@ -128,18 +132,31 @@ function mat(hex, opts = {}) {
 }
 
 // ------------------------------------------------------------------ hats (units = face width U)
+// How each hat is worn. dy: band centre relative to the top-of-forehead landmark; z: band centre depth
+// (the skull centre is well behind the face); rx: band tilt (negative = front higher than back).
+// From face-landmark proportions: brows sit ~0.25 below the forehead landmark, ears ~0.45 below it,
+// and the back of the head ~1.4 face-widths behind the forehead.
+const HAT_FIT = {
+  beanie:  { dy: -0.31, z: -0.22, rx: -0.24 },
+  slouchy: { dy: -0.31, z: -0.22, rx: -0.24 },
+  pompom:  { dy: -0.29, z: -0.22, rx: -0.22 },
+  beret:   { dy: -0.24, z: -0.2,  rx: -0.2 },
+  bucket:  { dy: -0.27, z: -0.2,  rx: -0.18 },
+  cap:     { dy: -0.26, z: -0.2,  rx: -0.2 },
+  fedora:  { dy: -0.2,  z: -0.2,  rx: -0.14 },
+};
 // Hat origin sits at the hat-band centre; crown base is an ellipse wider front-to-back.
 function buildHat(model, hex, tex) {
   const g = new THREE.Group();
   const knitLike = ['beanie', 'slouchy', 'pompom', 'beret'].includes(model);
   const main = tex && tex.knit
     ? new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex.knit, emissive: 0xffffff, emissiveMap: tex.knit, emissiveIntensity: 0.32, roughness: 0.95, metalness: 0, side: THREE.DoubleSide })
-    : mat(hex, knitLike ? { roughness: 0.85, clearcoat: 0 } : {});
+    : mat(hex, knitLike ? { roughness: 0.85, clearcoat: 0 } : model === 'fedora' ? { roughness: 0.7, clearcoat: 0.1 } : { roughness: 0.78, clearcoat: 0.05 });
   const furMat = tex && tex.fur
     ? new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex.fur, emissive: 0xffffff, emissiveMap: tex.fur, emissiveIntensity: 0.4, roughness: 1, metalness: 0 })
     : mat(shade(hex, 0.15), { roughness: 1, clearcoat: 0 });
   const dark = mat(shade(hex, -0.45), { roughness: 0.6 });
-  const RX = 0.6, RZ = 0.7; // head-band radii
+  const RX = 0.6, RZ = 0.78; // head-band radii: a little wider and much deeper than the face so the hat wraps the whole skull
   const lathe = (pts, m, seg = 64) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg), m);
   const ellip = mesh => { mesh.scale.set(RX, 1, RZ); return mesh; };
 
@@ -158,7 +175,7 @@ function buildHat(model, hex, tex) {
     // flat, slightly puffed crown that overhangs the band; worn with a small tilt
     g.add(ellip(lathe([[1.0, -0.02], [1.0, 0.06], [1.12, 0.15], [1.22, 0.24], [1.14, 0.31], [0.8, 0.38], [0.35, 0.42], [0, 0.43]], main)));
     const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.026, 0.06, 10), main); stalk.position.y = 0.45; g.add(stalk);
-    g.rotation.z = -0.12; g.position.y = -0.13; g.scale.setScalar(1.06);
+    g.rotation.z = -0.1; g.scale.setScalar(0.96);
   } else if (model === 'slouchy') {
     const crown = ellip(lathe([[1.03, -0.12], [1.04, 0.14], [1.02, 0.36], [0.95, 0.58], [0.78, 0.8], [0.5, 0.95], [0.2, 1.0], [0, 1.0]], main));
     // let the top flop backwards
@@ -186,12 +203,16 @@ function buildHat(model, hex, tex) {
     const shape = new THREE.Shape();
     shape.absellipse(0, 0, 0.42, 0.42, Math.PI, 0, true);
     const visor = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 0.02, bevelEnabled: false, curveSegments: 32 }), mat(shade(hex, -0.1)));
-    visor.rotation.x = Math.PI / 2 + 0.12;
-    visor.scale.set(1.15, 1, 1);
-    visor.position.set(0, 0.04, RZ * 0.92);
+    // bend the peak: edges curve down like a real pre-curved visor
+    const vp = visor.geometry.attributes.position;
+    for (let i = 0; i < vp.count; i++) { const x = vp.getX(i); vp.setZ(i, vp.getZ(i) + x * x * 0.55); }
+    vp.needsUpdate = true; visor.geometry.computeVertexNormals();
+    visor.rotation.x = Math.PI / 2 + 0.8;    // tilted down over the brows
+    visor.scale.set(1.2, 1.05, 1);
+    visor.position.set(0, 0.09, RZ * 0.93);
     g.add(visor);
   }
-  g.rotation.x = 0.1; // sits slightly forward
+  // tilt and placement are applied per frame from HAT_FIT
   return g;
 }
 

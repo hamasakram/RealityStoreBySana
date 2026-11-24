@@ -160,15 +160,16 @@ export default {
       </div>
     </div></div>`;
   },
-  mount(root) {
-    const btn = root.querySelector('#o-copy');
-    if (!btn) return;
-    const onCopy = async () => {
+  mount(root, param) {
+    const onCopy = async e => {
+      if (!e.target.closest('#o-copy')) return;
       const id = root.querySelector('#o-id').textContent;
       try { await navigator.clipboard.writeText(id); toast('Order number copied', 'check'); }
-      catch (e) { toast(`Your order number is ${id}`, 'check'); }
+      catch (err) { toast(`Your order number is ${id}`, 'check'); }
     };
-    btn.addEventListener('click', onCopy);
-    return () => btn.removeEventListener('click', onCopy);
+    root.addEventListener('click', onCopy);
+    // re-render once the order has been saved on the server (status/pending note change)
+    const off = S.on(k => { if (k === 'orders') { const y = window.scrollY; root.innerHTML = this.render(param); window.scrollTo(0, y); } });
+    return () => { root.removeEventListener('click', onCopy); off(); };
   },
 };

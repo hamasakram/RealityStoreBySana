@@ -39,7 +39,8 @@ export class FaceRig {
   setModel(product, colorHex) {
     if (this.item) { this.anchor.remove(this.item); disposeTree(this.item); }
     this.kind = product.zone;           // 'head' | 'face'
-    this.item = product.zone === 'face' ? buildGlasses(product.model, colorHex, product.lens) : buildHat(product.model, colorHex);
+    const tex = product.zone === 'head' && product.arTex ? loadTextures(product.arTex) : null;
+    this.item = product.zone === 'face' ? buildGlasses(product.model, colorHex, product.lens) : buildHat(product.model, colorHex, tex);
     this.anchor.add(this.item);
     this.layoutOccluder();
   }
@@ -99,8 +100,26 @@ export class FaceRig {
   dispose() { if (this.item) disposeTree(this.item); this.renderer.dispose(); }
 }
 
+// Photo textures cut from the product's own photos (knit, fur) so the 3D hat shows the real material.
+const texLoader = new THREE.TextureLoader();
+const texCache = {};
+function loadTex(src, rx, ry) {
+  const key = src + rx + ry;
+  if (!texCache[key]) {
+    const t = texLoader.load(src);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = t.wrapT = THREE.RepeatWrapping;
+    t.repeat.set(rx, ry);
+    t.anisotropy = 4;
+    texCache[key] = t;
+  }
+  return texCache[key];
+}
+function loadTextures(arTex) {
+  return { knit: arTex.knit ? loadTex(arTex.knit, 6, 2) : null, fur: arTex.fur ? loadTex(arTex.fur, 2, 1) : null };
+}
 function disposeTree(o) {
-  o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => m.dispose()); });
+  o.traverse(n => { if (n.geometry) n.geometry.dispose(); if (n.material) [].concat(n.material).forEach(m => m.dispose()); }); // textures are cached and reused
 }
 
 // ------------------------------------------------------------------ materials
@@ -110,9 +129,15 @@ function mat(hex, opts = {}) {
 
 // ------------------------------------------------------------------ hats (units = face width U)
 // Hat origin sits at the hat-band centre; crown base is an ellipse wider front-to-back.
-function buildHat(model, hex) {
+function buildHat(model, hex, tex) {
   const g = new THREE.Group();
-  const main = mat(hex, model === 'beanie' ? { roughness: 0.85, clearcoat: 0 } : {});
+  const knitLike = ['beanie', 'slouchy', 'pompom', 'beret'].includes(model);
+  const main = tex && tex.knit
+    ? new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex.knit, emissive: 0xffffff, emissiveMap: tex.knit, emissiveIntensity: 0.32, roughness: 0.95, metalness: 0, side: THREE.DoubleSide })
+    : mat(hex, knitLike ? { roughness: 0.85, clearcoat: 0 } : {});
+  const furMat = tex && tex.fur
+    ? new THREE.MeshStandardMaterial({ color: 0xffffff, map: tex.fur, emissive: 0xffffff, emissiveMap: tex.fur, emissiveIntensity: 0.4, roughness: 1, metalness: 0 })
+    : mat(shade(hex, 0.15), { roughness: 1, clearcoat: 0 });
   const dark = mat(shade(hex, -0.45), { roughness: 0.6 });
   const RX = 0.6, RZ = 0.7; // head-band radii
   const lathe = (pts, m, seg = 64) => new THREE.Mesh(new THREE.LatheGeometry(pts.map(([r, y]) => new THREE.Vector2(r, y)), seg), m);
@@ -129,6 +154,30 @@ function buildHat(model, hex) {
   } else if (model === 'beanie') {
     g.add(ellip(lathe([[1.02, -0.12], [1.02, 0.12], [0.98, 0.3], [0.85, 0.52], [0.6, 0.68], [0.3, 0.74], [0, 0.75]], main)));
     g.add(ellip(lathe([[1.06, -0.14], [1.07, 0.0], [1.06, 0.16], [1.0, 0.16]], dark))); // folded cuff
+  } else if (model === 'beret') {
+    // flat, slightly puffed crown that overhangs the band; worn with a small tilt
+    g.add(ellip(lathe([[1.0, -0.02], [1.0, 0.06], [1.12, 0.15], [1.22, 0.24], [1.14, 0.31], [0.8, 0.38], [0.35, 0.42], [0, 0.43]], main)));
+    const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.026, 0.06, 10), main); stalk.position.y = 0.45; g.add(stalk);
+    g.rotation.z = -0.12; g.position.y = -0.13; g.scale.setScalar(1.06);
+  } else if (model === 'slouchy') {
+    const crown = ellip(lathe([[1.03, -0.12], [1.04, 0.14], [1.02, 0.36], [0.95, 0.58], [0.78, 0.8], [0.5, 0.95], [0.2, 1.0], [0, 1.0]], main));
+    // let the top flop backwards
+    const pos = crown.geometry.attributes.position;
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i); if (y > 0.45) { pos.setZ(i, pos.getZ(i) - (y - 0.45) * 0.55); pos.setY(i, y - (y - 0.45) * 0.18); } }
+    pos.needsUpdate = true; crown.geometry.computeVertexNormals();
+    g.add(crown);
+    g.add(ellip(lathe([[1.07, -0.14], [1.08, 0.0], [1.07, 0.14], [1.02, 0.15]], main))); // fold-back cuff
+  } else if (model === 'pompom') {
+    g.add(ellip(lathe([[1.02, -0.12], [1.02, 0.12], [0.98, 0.3], [0.85, 0.52], [0.6, 0.68], [0.3, 0.74], [0, 0.75]], main)));
+    g.add(ellip(lathe([[1.06, -0.14], [1.07, 0.0], [1.06, 0.16], [1.0, 0.16]], main)));            // jacquard band
+    const top = new THREE.Mesh(new THREE.SphereGeometry(0.24, 28, 20), furMat); top.position.set(0, 0.86, -0.02); g.add(top);
+    for (const side of [-1, 1]) {                                                                // ear flaps + pom-pom ties
+      const flap = new THREE.Mesh(new THREE.SphereGeometry(1, 20, 14, 0, Math.PI * 2, Math.PI * 0.5, Math.PI * 0.5), main);
+      flap.scale.set(0.07, 0.36, 0.26); flap.position.set(side * RX * 0.98, -0.12, 0.0); g.add(flap);
+      const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 8), mat('#EFE6D6', { roughness: 0.9, clearcoat: 0 }));
+      cord.position.set(side * RX * 0.98, -0.68, 0.02); g.add(cord);
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(0.11, 20, 14), furMat); ball.position.set(side * RX * 0.98, -0.92, 0.02); g.add(ball);
+    }
   } else { // cap
     const crown = ellip(lathe([[1.0, 0], [0.99, 0.18], [0.9, 0.38], [0.66, 0.53], [0.35, 0.6], [0, 0.61]], main));
     g.add(crown);

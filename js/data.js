@@ -245,6 +245,25 @@ PRODUCTS.push(
     features: ['60% merino wool', 'Full cushioned footbed', 'Odour resistant', '1 pair'] }),
 );
 
+// ---------- Supplier photo items (real product photos + photo-textured 3D try-on) ----------
+PRODUCTS.push(
+  T({ id: 'woolen-beret-hat', name: 'Woolen Beret Hat', category: 'hats', zone: 'head', model: 'beret', price: 1290,
+    colors: [C('Oatmeal', '#C9B6A3')], sizes: ['One size 54–58 cm'],
+    image: 'img/products/woolen-beret.jpg', arTex: { knit: 'img/products/woolen-beret-knit.jpg' },
+    desc: 'Soft brushed-wool beret with a textured knit and a snug band — a classic French shape for winter outfits.',
+    features: ['Brushed wool-blend knit', 'Snug elastic band', 'Wear straight or tilted', 'Fits head circumference 54–58 cm'] }),
+  T({ id: 'girls-woolen-pompom-beanie', name: 'Girls Woolen Beanie Hat', category: 'hats', zone: 'head', model: 'pompom', price: 1490,
+    colors: [C('Camel & Cream', '#DCCBB2')], sizes: ['Kids 3–7 yrs (48–52 cm)', 'Kids 8–12 yrs (52–54 cm)'],
+    image: 'img/products/girls-pompom-beanie.jpg', arTex: { knit: 'img/products/girls-pompom-beanie-knit.jpg', fur: 'img/products/girls-pompom-beanie-fur.jpg' },
+    desc: 'Rib-knit girls’ beanie with a faux-fur pom-pom, a jacquard band and warm ear flaps with pom-pom ties.',
+    features: ['Soft rib knit with jacquard band', 'Faux-fur pom-pom on top', 'Ear flaps with pom-pom ties', 'Sized for children'] }),
+  T({ id: 'green-woolen-beanie-hat', name: 'Woolen Beanie Hat', category: 'hats', zone: 'head', model: 'slouchy', price: 1190,
+    colors: [C('Pistachio Green', '#A9D39A')], sizes: ['One size 54–60 cm'],
+    image: 'img/products/green-woolen-beanie.jpg', arTex: { knit: 'img/products/green-woolen-beanie-knit.jpg' },
+    desc: 'Relaxed slouchy beanie in a fluffy rib knit with a fold-back cuff.',
+    features: ['Fluffy wool-blend rib knit', 'Slouchy fit with fold-back cuff', 'Stretches to 54–60 cm', 'Hand wash'] }),
+);
+
 // ---------------- colour helpers ----------------
 export function shade(hex, amt) {
   // amt -1..1 : negative darkens, positive lightens
@@ -292,7 +311,7 @@ export function art(product, colorHex) {
       <path d="M100 46c-6 20-8 52-6 76M100 46c12 22 18 50 18 74" stroke="${lo2}" stroke-width="2" fill="none" opacity=".6"/>
       <circle cx="100" cy="46" r="6" fill="${lo}"/>
       <path d="M54 80c8-16 22-24 36-26" stroke="${shine}" stroke-width="5" fill="none" stroke-linecap="round"/>`; break;
-    case 'beanie': body = `
+    case 'beanie': case 'slouchy': case 'pompom': case 'beret': body = `
       <path d="M44 120c-4-52 24-86 56-86s60 34 56 86z" fill="${V}"/>
       ${[56, 70, 84, 100, 116, 130, 144].map(x => `<path d="M${x} 118c-2-24 0-50 ${x < 100 ? 6 : -6}-70" stroke="${lo}" stroke-width="3" fill="none" opacity=".55"/>`).join('')}
       <rect x="38" y="112" width="124" height="36" rx="10" fill="${H}"/>

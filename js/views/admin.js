@@ -5,7 +5,7 @@ import { esc, money, icon, productArt, art, toast, openModal, go, catLabel, zone
 import { CATEGORIES } from '../data.js';
 
 const TEMPLATES = {
-  hats: [['bucket', 'Bucket hat'], ['cap', 'Baseball cap'], ['beanie', 'Rib beanie'], ['fedora', 'Fedora']],
+  hats: [['bucket', 'Bucket hat'], ['cap', 'Baseball cap'], ['beanie', 'Rib beanie'], ['slouchy', 'Slouchy beanie'], ['pompom', 'Pom-pom beanie'], ['beret', 'Beret'], ['fedora', 'Fedora']],
   sunglasses: [['round', 'Round frames'], ['aviator', 'Aviator'], ['wayfarer', 'Wayfarer'], ['cateye', 'Cat-eye']],
   jackets: [['bomber', 'Bomber'], ['denim', 'Denim trucker'], ['puffer', 'Quilted puffer']],
   gloves: [['knit', 'Knit gloves'], ['leather', 'Leather gloves'], ['sport', 'Sport gloves']],

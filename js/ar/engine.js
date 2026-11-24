@@ -9,6 +9,7 @@ const MODELS = {
   hands: [VENDOR + 'models/hand_landmarker.task', 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task'],
   pose: [VENDOR + 'models/pose_landmarker_lite.task', 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task'],
 };
+const HEAD_PER_FACE = 4.5; // head circumference ≈ 4.5 × landmark face width (calibrated on a frontal adult test face)
 const TRACKER_FOR = { head: 'face', face: 'face', hands: 'hands', body: 'pose', feet: 'pose' };
 
 let visionPromise = null;
@@ -58,7 +59,7 @@ export function cameraSupport() {
 
 export class TryOnEngine {
   /** stage: element containing .mirror > video + canvas.gl + canvas.fx */
-  constructor(stage, { onStatus, onTrack } = {}) {
+  constructor(stage, { onStatus, onTrack, onMeasure } = {}) {
     this.stage = stage;
     this.mirror = stage.querySelector('.mirror');
     this.video = stage.querySelector('video');
@@ -67,6 +68,10 @@ export class TryOnEngine {
     this.ctx = this.fx.getContext('2d');
     this.onStatus = onStatus || (() => {});
     this.onTrack = onTrack || (() => {});
+    this.onMeasure = onMeasure || (() => {});
+    this.samples = [];
+    this.lightCanvas = document.createElement('canvas'); this.lightCanvas.width = 32; this.lightCanvas.height = 24;
+    this.lastLight = 0;
     this.facing = 'user';
     this.fit = { scale: 1, lift: 0 };
     this.running = false;
@@ -130,6 +135,7 @@ export class TryOnEngine {
     }
     this.ctx.clearRect(0, 0, this.fx.width, this.fx.height);
     this.smoothers.forEach(s => s.reset());
+    this.samples = [];
     this.lostSince = performance.now();
     this.onStatus('live');
   }
@@ -162,7 +168,12 @@ export class TryOnEngine {
     const { w, h, ctx, product, color, fit } = this;
     if (this.kind === 'face') {
       const lms = res.faceLandmarks && res.faceLandmarks[0];
-      if (lms) { this.rig.update(lms); return true; }
+      if (lms) {
+        const now = performance.now();
+        if (now - this.lastLight > 500) { this.lastLight = now; this.sampleLight(lms); }
+        if (product.zone === 'head') this.measureHead(lms);
+        this.rig.update(lms); return true;
+      }
       this.rig.hide(); return false;
     }
     ctx.clearRect(0, 0, w, h);
@@ -178,6 +189,38 @@ export class TryOnEngine {
     return this.kind === 'pose' && product.zone === 'body'
       ? drawJacket(ctx, sm, w, h, product.model, color, fit)
       : drawFeet(ctx, sm, w, h, product, color, fit);
+  }
+
+  // Average colour of the picture around the forehead -> virtual light colour & brightness.
+  sampleLight(lms) {
+    try {
+      const c = this.lightCanvas, x = c.getContext('2d', { willReadFrequently: true });
+      x.drawImage(this.video, 0, 0, c.width, c.height);
+      const cx = Math.round(lms[10].x * c.width), cy = Math.round(lms[10].y * c.height);
+      const d = x.getImageData(Math.max(0, cx - 6), Math.max(0, cy - 2), 12, 8).data;
+      let r = 0, g = 0, b = 0, n = 0;
+      for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+      if (n) this.rig.setLighting({ r: r / n, g: g / n, b: b / n });
+    } catch (e) { /* ignore */ }
+  }
+  // Head size from the iris: the human iris is ~11.7 mm across, so it works as a ruler.
+  measureHead(lms) {
+    if (lms.length < 478) return;
+    const w = this.w, h = this.h;
+    const d = (a, b) => Math.hypot((lms[a].x - lms[b].x) * w, (lms[a].y - lms[b].y) * h, (lms[a].z - lms[b].z) * w);
+    // only measure when facing the camera: a turned head makes the face look narrower
+    const yaw = Math.abs(lms[234].z - lms[454].z) / Math.max(1e-6, Math.abs(lms[234].x - lms[454].x));
+    if (yaw > 0.22) return;
+    const iris = (d(469, 471) + d(474, 476)) / 2;
+    if (iris < 6) return;
+    const faceMM = d(234, 454) / iris * 11.7;
+    const cm = faceMM * HEAD_PER_FACE / 10;
+    if (cm < 40 || cm > 70) return;
+    this.samples.push(cm); if (this.samples.length > 60) this.samples.shift();
+    if (this.samples.length >= 20 && this.samples.length % 10 === 0) {
+      const sorted = [...this.samples].sort((a, b) => a - b);
+      this.onMeasure({ headCm: Math.round(sorted[sorted.length >> 1] * 2) / 2 });
+    }
   }
 
   snapshot(label) {

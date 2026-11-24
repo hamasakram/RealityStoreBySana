@@ -154,6 +154,28 @@ export default {
     const show = id => ['#ov-intro', '#ov-load', '#ov-err'].forEach(o => { $(o).hidden = o !== id; });
     const setHint = t => { $('#hint').textContent = t; };
 
+    // Size suggestion from the live head measurement (head products with sizes in cm)
+    function pickSize(p, cm) {
+      let best = null, bestD = 1e9;
+      for (const label of p.sizes || []) {
+        const r = label.match(/(\d{2})\s*[–-]\s*(\d{2})\s*cm/) || label.match(/(\d{2})\s*cm/);
+        if (!r) continue;
+        const lo = +r[1], hi = +(r[2] || r[1]);
+        const dist = cm < lo ? lo - cm : cm > hi ? cm - hi : 0;
+        if (dist < bestD) { bestD = dist; best = label; }
+      }
+      return best;
+    }
+    function sizeHint() {
+      const p = state.p;
+      if (p.zone !== 'head') return '';
+      if (!state.headCm) return engine ? `<p class="small muted" id="fit-measure" style="margin:12px 0 0">${icon('sparkle')} Look straight at the camera — we’re measuring your head size…</p>` : '';
+      const sug = pickSize(p, state.headCm);
+      return `<div class="note" id="fit-measure" style="margin-top:12px;display:grid;gap:8px">
+        <span>${icon('sparkle')} Your head is about <b>${state.headCm} cm</b> around${sug ? ` — we suggest <b>${esc(sug)}</b>` : ''}.</span>
+        ${sug && sug !== state.size && p.sizes.length > 1 ? `<button class="btn btn-sm" id="use-size" data-s="${esc(sug)}">Use ${esc(sug)}</button>` : ''}
+        <span class="small dim">Estimated from the camera (your iris is the ruler). For an exact size, measure with a tape above your ears.</span></div>`;
+    }
     function renderCard() {
       const { p, color, size } = state;
       $('#pcard').innerHTML = `
@@ -163,6 +185,7 @@ export default {
         ${p.colors?.length ? `<span class="label">Colour · <span style="color:var(--text)">${esc(color.name)}</span></span>
         <div class="opts" id="colors">${p.colors.map((c, i) => `<button class="sw sw-lg ${c.name === color.name ? 'on' : ''}" style="background:${esc(c.hex)}" data-i="${i}" aria-label="${esc(c.name)}" aria-pressed="${c.name === color.name}"></button>`).join('')}</div>` : ''}
         ${p.sizes?.length > 1 ? `<span class="label" style="margin-top:14px">Size</span><div class="opts" id="sizes">${p.sizes.map(s => `<button class="chip ${s === size ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
+        ${sizeHint()}
         <div class="buyrow" style="margin-top:16px">
           <button class="btn btn-buy" data-act="buy" data-id="${esc(p.id)}" data-color="${esc(color.name)}" data-size="${esc(size)}">Buy now</button>
           <button class="btn" data-act="add" data-id="${esc(p.id)}" data-color="${esc(color.name)}" data-size="${esc(size)}">${icon('bag')} Add to bag</button>
@@ -172,6 +195,7 @@ export default {
         if (engine) engine.setColor(state.color.hex);
       }));
       $('#pcard').querySelectorAll('#sizes button').forEach(b => b.addEventListener('click', () => { state.size = b.dataset.s; renderCard(); }));
+      $('#pcard').querySelector('#use-size')?.addEventListener('click', e => { state.size = e.currentTarget.dataset.s; renderCard(); toast('Size ' + state.size + ' selected', 'check'); });
       $('#to-product').href = '#p-' + p.id; $('#err-product').href = '#p-' + p.id;
       $('#fit-note').textContent = p.zone === 'feet' ? 'Feet try-on is a beta preview — it follows your ankles, heels and toes.' : p.zone === 'body' ? 'Jackets are a live preview of colour and style, not an exact drape.' : 'Nudge the size or height if it sits a little off.';
     }
@@ -203,7 +227,10 @@ export default {
         engine = new TryOnEngine(stage, {
           onStatus: s => {
             if (s === 'model') { $('#load-title').textContent = 'Loading the try-on model…'; $('#load-sub').textContent = 'This happens once; after that it’s instant.'; }
-            if (s === 'live') { show(null); $('#hud').hidden = false; setHint(LOST_HINT[state.p.zone]); }
+            if (s === 'live') { show(null); $('#hud').hidden = false; setHint(LOST_HINT[state.p.zone]); renderCard(); }
+          },
+          onMeasure: ({ headCm }) => {
+            if (Math.abs((state.headCm || 0) - headCm) >= 0.5) { state.headCm = headCm; renderCard(); }
           },
           onTrack: (ok, lostMs) => {
             if (ok) {

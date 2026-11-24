@@ -1,0 +1,10 @@
+{
+  "name": "realitystorebysana",
+  "private": true,
+  "type": "module",
+  "description": "RealityStore — Pakistan's first augmented reality online store",
+  "dependencies": {
+    "@neondatabase/serverless": "1.0.2"
+  },
+  "engines": { "node": ">=20" }
+}

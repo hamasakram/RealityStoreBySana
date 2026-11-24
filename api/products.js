@@ -8,7 +8,7 @@ export default handler({
     const rows = all
       ? await sql`SELECT id, data, hidden FROM products ORDER BY sort, created_at`
       : await sql`SELECT id, data, hidden FROM products WHERE hidden = false ORDER BY sort, created_at`;
-    res.setHeader('Cache-Control', all ? 'no-store' : 'public, max-age=0, s-maxage=30, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', all ? 'no-store' : 'public, max-age=0, s-maxage=5, stale-while-revalidate=15');
     res.statusCode = 200;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.end(JSON.stringify({ products: rows.map(r => ({ ...r.data, id: r.id, hidden: r.hidden })) }));

@@ -8,32 +8,36 @@ const STYLE = `<style>
 .v-checkout .co-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:26px 0 22px}
 .v-checkout .co-head h1{margin:0;font-size:clamp(32px,4.4vw,48px)}
 .v-checkout .co-head a{color:var(--mist);display:inline-flex;gap:6px;align-items:center;min-height:44px}
-.v-checkout .co-head a:hover{color:#fff}
+.v-checkout .co-head a:hover{color:var(--text)}
 .v-checkout .co-grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
 .v-checkout form{display:grid;gap:18px;max-width:720px}
 .v-checkout .sec h2{font-size:20px;margin:0;display:flex;align-items:center;gap:12px}
 .v-checkout .sec .sec-sub{margin:6px 0 18px 44px;font-size:14px;color:var(--dim)}
 .v-checkout .step{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none;font:700 14px var(--f-display);
-  background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px rgba(124,92,255,.45)}
-.v-checkout .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  background:var(--gloss-violet);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px rgba(47,93,70,0.248)}
+.v-checkout .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px;align-items:start}
+.v-checkout .sec{box-shadow:var(--shadow)}
+.v-checkout .sec h2{color:var(--text)}
 .v-checkout .field{margin-bottom:16px}
 .v-checkout .field label .opt{color:var(--dim);font-weight:500}
 .v-checkout .hint{font-size:13px;color:var(--dim)}
 .v-checkout .err:empty{display:none}
 .v-checkout .err{display:flex;gap:6px;align-items:center}
 .v-checkout select.input{appearance:none;-webkit-appearance:none;padding-right:40px;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C3C6E2' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232F5D46' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 14px center;background-size:18px}
 .v-checkout textarea.input{min-height:84px}
 .v-checkout .opts{display:grid;gap:10px}
 .v-checkout .radio-card{min-height:64px;align-items:center}
-.v-checkout .radio-card .rc-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--violet-hi)}
+.v-checkout .radio-card .rc-ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex:none;background:rgba(47,93,70,0.054);border:1px solid var(--line);color:var(--violet-hi)}
 .v-checkout .radio-card .rc-txt{flex:1;display:grid;gap:2px}
-.v-checkout .radio-card .rc-txt b{font:600 15px var(--f-display);color:#fff}
+.v-checkout .radio-card .rc-txt b{font:600 15px var(--f-display);color:var(--text)}
 .v-checkout .radio-card .rc-txt span{font-size:13px;color:var(--dim)}
 .v-checkout .radio-card.off{opacity:.55;cursor:not-allowed}
 .v-checkout .radio-card.off input{cursor:not-allowed}
-.v-checkout .soon{font:700 11px var(--f-body);padding:3px 9px;border-radius:999px;border:1px solid var(--line-2);color:var(--mist);white-space:nowrap}
+.v-checkout .soon{font:700 11px var(--f-body);padding:3px 9px;border-radius:999px;border:1px solid var(--line-2);background:var(--sage);color:var(--mist);white-space:nowrap}
+.v-checkout .radio-card:has(input:checked) .rc-ico{background:var(--gloss-violet);color:#fff;border-color:transparent}
+.v-checkout .radio-card:focus-within{outline:2px solid var(--violet);outline-offset:2px}
 .v-checkout .cod-note{margin-top:12px}
 .v-checkout .place{display:grid;gap:12px}
 .v-checkout .place .note{display:flex;gap:10px;align-items:flex-start}
@@ -223,7 +227,7 @@ export default {
                 <span class="soon">Coming soon</span>
               </label>
             </div>
-            <p class="note cod-note">Please keep <b style="color:#fff" id="co-cod-amt">${money(total)}</b> ready. You can check the parcel with the rider before paying.</p>
+            <p class="note cod-note">Please keep <b style="color:var(--text)" id="co-cod-amt">${money(total)}</b> ready. You can check the parcel with the rider before paying.</p>
           </section>
 
           <div class="place">

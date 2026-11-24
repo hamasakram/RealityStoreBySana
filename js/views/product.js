@@ -82,7 +82,7 @@ function sizeGuide(p) {
 function reviewsPanel(p) {
   const n = Math.max(0, Number(p.reviews) || 0);
   const r = Math.max(0, Math.min(5, Number(p.rating) || 0));
-  if (!n) return `<div class="pd-noreviews">${icon('star')}<p class="muted" style="margin:0">No ratings yet. Written reviews appear here after customers buy.</p></div>`;
+  if (!n || !r) return `<div class="pd-empty-rev"><span class="pd-tip-ico">${icon('star')}</span><div><h3>No reviews yet</h3><p class="muted" style="margin:0">This one is new to the store. Ratings and written reviews appear here after customers buy — try it on with your camera in the meantime.</p></div></div>`;
   const c = ratingBars(r, n);
   return `<div class="pd-reviews">
     <div class="pd-score">
@@ -128,53 +128,59 @@ const STYLE = `<style>
 .v-product{padding-bottom:40px}
 .v-product .pd{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:clamp(24px,4vw,56px);align-items:start}
 .v-product .pd-left{position:sticky;top:92px;display:grid;gap:14px}
-.v-product .stage{aspect-ratio:1/1;border-radius:28px;perspective:1100px;touch-action:pan-y;cursor:grab;
-  background:radial-gradient(circle at 50% 34%,#3C30A8 0%,#22226A 36%,#141645 68%,#0D0F31 100%)}
-.v-product .stage::before{inset:0 0 62% 0}
-.v-product .stage .orb{width:58%;height:58%;left:21%;top:12%;background:var(--violet);opacity:.45}
+.v-product .stage{aspect-ratio:1/1;border-radius:28px;perspective:1100px;touch-action:pan-y;cursor:grab;overflow:hidden;
+  background:radial-gradient(120% 90% at 50% 18%,#FFFFFF 0%,#F6F9F5 38%,#E8EFE8 70%,#DAE5DA 100%);
+  border:1px solid var(--line);box-shadow:0 24px 50px -18px rgba(47,93,70,.22),0 2px 8px rgba(30,43,36,.05),inset 0 1px 0 #fff}
+.v-product .stage::before{inset:0 0 58% 0;background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,0))}
+.v-product .stage::after{content:"";position:absolute;left:0;right:0;bottom:0;height:34%;pointer-events:none;
+  background:linear-gradient(180deg,rgba(232,239,232,0),rgba(214,226,214,.55))}
+.v-product .stage .orb{width:62%;height:62%;left:19%;top:10%;background:#FFFFFF;opacity:.9;filter:blur(40px)}
 .v-product .stage-hint{position:absolute;left:16px;top:16px;z-index:4;display:flex;gap:8px;flex-wrap:wrap}
 .v-product .stage-hint .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px}
 .v-product .stage-hint .ico{width:14px;height:14px}
-.v-product .plinth{position:absolute;left:17%;right:17%;bottom:13%;height:15%;border-radius:50%;z-index:1;
-  background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,.22),rgba(168,148,255,.14) 45%,rgba(124,92,255,0) 70%);
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.18)}
-.v-product .plinth::after{content:"";position:absolute;left:12%;right:12%;top:40%;height:40%;border-radius:50%;background:radial-gradient(rgba(0,0,0,.55),rgba(0,0,0,0) 70%);filter:blur(4px)}
+.v-product .plinth{position:absolute;left:18%;right:18%;bottom:12%;height:13%;border-radius:50%;z-index:1;
+  background:radial-gradient(ellipse at 50% 30%,#FFFFFF 0%,#F7FAF6 40%,#E4ECE4 78%,#D3DFD3 100%);
+  border:1px solid rgba(255,255,255,.9);
+  box-shadow:inset 0 3px 0 #fff,inset 0 -6px 12px rgba(47,93,70,.10),0 20px 30px -12px rgba(47,93,70,.30),0 6px 12px -6px rgba(30,43,36,.12)}
+.v-product .plinth::after{content:"";position:absolute;left:22%;right:22%;top:22%;height:42%;border-radius:50%;background:radial-gradient(rgba(30,43,36,0.16),rgba(30,43,36,0) 70%);filter:blur(5px)}
 .v-product .tilt{position:absolute;left:17%;right:17%;top:12%;bottom:18%;z-index:2;display:grid;place-items:center;
   transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.7,.2,1);will-change:transform}
 .v-product .tilt.live{transition:transform .08s linear}
-.v-product .tilt svg,.v-product .tilt img{width:100%;height:100%;filter:drop-shadow(0 26px 26px rgba(0,0,0,.45))}
+.v-product .tilt svg,.v-product .tilt img{width:100%;height:100%;filter:drop-shadow(0 22px 22px rgba(30,43,36,0.14))}
 .v-product .tilt img{border-radius:18px;object-fit:cover}
 .v-product .float{width:100%;height:100%;display:grid;place-items:center;animation:pdfloat 6s ease-in-out infinite}
 @keyframes pdfloat{50%{transform:translateY(-8px)}}
 .v-product .glare{position:absolute;inset:0;z-index:3;pointer-events:none;opacity:0;transition:opacity .3s;
-  background:radial-gradient(420px circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.16),rgba(255,255,255,0) 60%)}
+  background:radial-gradient(420px circle at var(--gx,50%) var(--gy,30%),rgba(255,255,255,.55),rgba(255,255,255,0) 60%)}
 .v-product .stage:hover .glare{opacity:1}
 .v-product .thumbs{display:flex;gap:10px;flex-wrap:wrap}
 .v-product .thumb-btn{width:76px;height:76px;border-radius:16px;padding:6px;border:1px solid var(--line);
-  background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E);display:grid;place-items:center;transition:border-color .2s,transform .2s}
+  background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2);display:grid;place-items:center;transition:border-color .2s,transform .2s}
 .v-product .thumb-btn:hover{transform:translateY(-2px);border-color:var(--line-2)}
-.v-product .thumb-btn[aria-pressed="true"]{border-color:var(--violet-hi);box-shadow:0 0 0 2px rgba(168,148,255,.35),0 8px 20px rgba(124,92,255,.35)}
+.v-product .thumb-btn[aria-pressed="true"]{border-color:var(--violet-hi);box-shadow:0 0 0 2px rgba(47,93,70,0.21),0 8px 20px rgba(47,93,70,0.193)}
 .v-product .thumb-btn svg,.v-product .thumb-btn img{width:100%;height:100%;border-radius:10px}
 .v-product .pd-right{display:grid;gap:18px}
 .v-product .pd-top .row{gap:8px}
 .v-product h1{font-size:clamp(30px,3.8vw,46px);margin:10px 0 6px}
 .v-product .pd-sub{display:flex;gap:10px;flex-wrap:wrap;align-items:center;color:var(--mist);font-size:15px}
-.v-product .pd-sub a:hover{color:#fff}
+.v-product .pd-sub a:hover{color:var(--text)}
 .v-product .pd-rate{background:none;border:0;padding:0;color:var(--mist);display:inline-flex;gap:6px;align-items:center;min-height:32px}
-.v-product .pd-rate:hover{color:#fff}
+.v-product .pd-rate:hover{color:var(--text)}
 .v-product .pd-price{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
 .v-product .save{color:var(--ok);font-weight:600;font-size:15px}
 .v-product .opt-label{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;font:600 14px var(--f-body);color:var(--mist)}
-.v-product .opt-label b{color:#fff}
+.v-product .opt-label b{color:var(--text)}
 .v-product .link-btn{background:none;border:0;padding:6px 0;color:var(--violet-hi);font:600 14px var(--f-body);text-decoration:underline;text-underline-offset:3px;min-height:32px}
 .v-product .sw-row{display:flex;gap:14px;flex-wrap:wrap;padding:4px}
-.v-product .sw-lg{width:40px;height:40px;border-radius:50%;box-shadow:inset 0 2px 4px rgba(255,255,255,.35),inset 0 -4px 8px rgba(0,0,0,.25)}
-.v-product .sizes{display:flex;gap:8px;flex-wrap:wrap}
-.v-product .sizes .chip{min-height:44px;min-width:56px;justify-content:center;font-size:15px}
-.v-product .sizes.bad .chip{border-color:rgba(255,122,138,.6)}
-.v-product .stepper{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-radius:999px;background:rgba(255,255,255,.04)}
+.v-product .sw-lg{width:40px;height:40px;border-radius:50%;box-shadow:inset 0 2px 4px rgba(255,255,255,.35),inset 0 -4px 8px rgba(30,43,36,0.087)}
+.v-product .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,max(76px,calc(var(--szch,3) * 7.2px + 42px))),1fr));gap:8px}
+.v-product .sizes .chip{min-height:44px;min-width:0;padding:8px 12px;justify-content:center;text-align:center;font-size:15px;line-height:1.25;white-space:normal;background:#fff}
+.v-product .sizes .chip.on{background:rgba(47,93,70,0.12);border-color:var(--violet);box-shadow:0 0 0 1px var(--violet) inset}
+.v-product .sizes .chip:focus-visible,.v-product .tabs button:focus-visible{outline:2px solid var(--violet);outline-offset:2px}
+.v-product .sizes.bad .chip{border-color:rgba(185,58,52,0.6)}
+.v-product .stepper{display:inline-flex;align-items:center;border:1px solid var(--line-2);border-radius:999px;background:rgba(47,93,70,0.036)}
 .v-product .stepper button{width:44px;height:44px;border:0;background:transparent;border-radius:50%;display:grid;place-items:center}
-.v-product .stepper button:hover{background:rgba(255,255,255,.08)}
+.v-product .stepper button:hover{background:rgba(47,93,70,0.072)}
 .v-product .stepper button[disabled]{opacity:.35;pointer-events:none}
 .v-product .stepper output{min-width:34px;text-align:center;font:600 16px var(--f-display)}
 .v-product .actions{display:grid;gap:12px}
@@ -183,44 +189,51 @@ const STYLE = `<style>
 .v-product .act-row{display:flex;gap:10px}
 .v-product .act-row .btn{flex:1}
 .v-product .wish-lg{width:54px;height:54px;flex:none}
-.v-product .wish-lg.on{color:#FF8FB1;border-color:rgba(255,143,177,.5)}
+.v-product .wish-lg.on{color:#B93A34;border-color:rgba(185,58,52,.4)}
 .v-product .wish-lg.on .ico{fill:currentColor}
 .v-product .facts{display:grid;gap:0;padding:6px 18px}
 .v-product .fact{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);font-size:15px}
 .v-product .fact:last-child{border-bottom:0}
 .v-product .fact .ico{color:var(--violet-hi);margin-top:2px}
-.v-product .fact b{color:#fff;font-weight:600}
+.v-product .fact b{color:var(--text);font-weight:600}
 .v-product .fact a{color:var(--violet-hi);text-decoration:underline;text-underline-offset:3px}
 .v-product .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:8px;vertical-align:middle}
-.v-product .dot.ok{background:var(--ok);box-shadow:0 0 10px var(--ok)}
-.v-product .dot.low{background:#FFB86B;box-shadow:0 0 10px #FFB86B}
+.v-product .dot.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(46,139,87,.16)}
+.v-product .dot.low{background:#C98A0B;box-shadow:0 0 0 3px rgba(201,138,11,.16)}
 .v-product .dot.out{background:var(--danger)}
 .v-product .size-err{margin-top:8px}
 .v-product .pd-tabs{margin-top:clamp(36px,5vw,64px)}
 .v-product .tabs{overflow-x:auto;flex-wrap:nowrap;scrollbar-width:none}
 .v-product .tabs button{min-height:44px;white-space:nowrap}
+.v-product .tabs button.on{color:var(--violet-lo);border-color:var(--violet);border-bottom-width:3px}
+.v-product .tabs button:hover{color:var(--text)}
 .v-product [role=tabpanel]{max-width:900px}
 .v-product .pd-panels{border-radius:22px}
-.v-product .pd-panels .tbl tbody tr:hover{background:rgba(255,255,255,.03)}
+.v-product .pd-panels .tbl tbody tr:hover{background:rgba(47,93,70,0.027)}
 .v-product .pd-list{list-style:none;padding:0;margin:0 0 18px;display:grid;gap:10px}
 .v-product .pd-list li{display:flex;gap:10px;align-items:flex-start;color:var(--mist)}
 .v-product .pd-list .ico{color:var(--violet-hi);margin-top:2px}
 .v-product .pd-feat{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;list-style:none;padding:0;margin:0}
-.v-product .pd-feat li{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+.v-product .pd-feat li{display:flex;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(47,93,70,0.027)}
 .v-product .pd-feat .ico{color:var(--violet-hi)}
 .v-product .pd-tip-head{display:flex;gap:14px;align-items:center;margin-bottom:14px}
-.v-product .pd-tip-ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 20px rgba(124,92,255,.4)}
+.v-product .pd-tip-ico{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;background:var(--gloss-violet);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 20px rgba(47,93,70,0.22)}
 .v-product .pd-guide .ico{width:16px;height:16px;color:var(--violet-hi);display:inline-block;vertical-align:-2px}
 .v-product .pd-reviews{display:grid;grid-template-columns:200px 1fr;gap:28px;align-items:center}
-.v-product .pd-score{text-align:center;padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.03)}
+.v-product .pd-score{text-align:center;padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(47,93,70,0.027)}
 .v-product .pd-big{font:800 48px/1 var(--f-display);margin-bottom:6px}
 .v-product .pd-score .stars{font-size:18px}
 .v-product .pd-bars{display:grid;gap:10px}
 .v-product .pd-bar{display:grid;grid-template-columns:42px 1fr 44px;gap:12px;align-items:center;font-size:14px;color:var(--mist)}
-.v-product .pd-bar .track{height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+.v-product .pd-bar .track{height:10px;border-radius:999px;background:rgba(47,93,70,0.072);overflow:hidden}
 .v-product .pd-bar i{display:block;height:100%;border-radius:inherit;background:var(--gloss-violet)}
-.v-product .pd-noreviews{display:flex;gap:12px;align-items:center;margin-top:18px;padding:14px 16px;border:1px dashed var(--line-2);border-radius:14px}
+.v-product .pd-noreviews{display:flex;gap:12px;align-items:center;margin-top:18px;padding:14px 16px;border:1px dashed var(--line-2);border-radius:14px;background:var(--sage)}
 .v-product .pd-noreviews .ico{color:var(--violet-hi)}
+.v-product .pd-empty-rev{display:flex;gap:16px;align-items:center;padding:22px;border-radius:18px;border:1px dashed var(--line-2);background:linear-gradient(180deg,#fff,var(--sage))}
+.v-product .pd-empty-rev .pd-tip-ico{flex:none}
+.v-product .pd-empty-rev h3{margin:0 0 4px;font-size:18px}
+.v-product .pd-new{display:inline-flex;align-items:center;gap:6px;color:var(--mist);font-size:14px}
+.v-product .pd-new .ico{width:15px;height:15px;color:var(--violet-hi)}
 .v-product .look{margin-top:clamp(40px,6vw,80px)}
 .v-product .mbar{display:none}
 @media(max-width:900px){
@@ -238,13 +251,14 @@ const STYLE = `<style>
   .v-product .look .products::-webkit-scrollbar{display:none}
   .v-product .look .pcard{flex:0 0 74%;scroll-snap-align:start}
   .v-product .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;gap:8px;align-items:center;
-    padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(18,21,58,.92),rgba(11,13,33,.97));
-    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line-2);box-shadow:0 -14px 30px rgba(0,0,0,.4);
-    transform:translateY(110%);transition:transform .3s}
-  .v-product .mbar.show{transform:none}
+    padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(251,248,243,.94));
+    backdrop-filter:blur(16px) saturate(1.2);-webkit-backdrop-filter:blur(16px) saturate(1.2);border-top:1px solid var(--line-2);box-shadow:0 -12px 30px rgba(47,93,70,0.12);
+    transform:translateY(110%);visibility:hidden;transition:transform .3s,visibility 0s .3s}
+  .v-product .mbar.show{transform:none;visibility:visible;transition:transform .3s}
+  .v-product .sizes .chip{font-size:14px}
   .v-product .mbar .price{font-size:17px;line-height:1.1}
   .v-product .mbar .mb-p{flex:1;min-width:0}
-  .v-product .mbar .mb-n{font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .v-product .mbar .mb-n{font-size:12px;color:var(--mist);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .v-product .mbar .btn{padding:0 14px;min-height:46px;font-size:15px}
 }
 @media(max-width:360px){.v-product .mbar .btn-try span{display:none}}
@@ -270,6 +284,8 @@ export default {
     const look = completeTheLook(p);
     const wish = S.inWish(p.id);
     const dis = st.ok ? '' : 'disabled';
+    const hasReviews = Number(p.reviews) > 0 && Number(p.rating) > 0;
+    const szCh = Math.max(0, ...sizes.map(s => String(s).length));
     const dataAttrs = `data-id="${esc(p.id)}" data-color="${esc(c0?.name || '')}" data-size="${esc(size0)}"`;
 
     return `<div class="v-product">${STYLE}
@@ -304,7 +320,7 @@ export default {
             <div class="pd-sub">
               <a href="#shop-${esc(p.category)}">${esc(catLabel(p.category))}</a>
               <span class="dim" aria-hidden="true">·</span>
-              <button type="button" class="pd-rate" data-goto-tab="reviews">${stars(p.rating)} <span>${esc(Number(p.rating).toFixed(1))}</span> <span class="dim">(${esc(p.reviews)} ratings)</span></button>
+              ${hasReviews ? `<button type="button" class="pd-rate" data-goto-tab="reviews">${stars(p.rating)} <span>${esc(Number(p.rating).toFixed(1))}</span> <span class="dim">(${esc(Number(p.reviews).toLocaleString('en-US'))} ratings)</span></button>` : `<span class="pd-new">${icon('star')} No reviews yet</span>`}
             </div>
           </div>
 
@@ -322,7 +338,7 @@ export default {
 
           ${sizes.length ? `<div id="pd-size-block">
             <div class="opt-label"><span id="pd-size-lbl">Size${size0 ? `: <b>${esc(size0)}</b>` : ''}</span>${GUIDES[p.category] ? `<button type="button" class="link-btn" data-goto-tab="size">Size guide</button>` : ''}</div>
-            <div class="sizes" role="group" aria-labelledby="pd-size-lbl">
+            <div class="sizes" role="group" aria-labelledby="pd-size-lbl" style="--szch:${szCh}">
               ${sizes.map(s => `<button type="button" class="chip ${s === size0 ? 'on' : ''}" data-size-pick="${esc(s)}" aria-pressed="${s === size0}">${esc(s)}</button>`).join('')}
             </div>
             <div class="err size-err" id="pd-size-err" role="alert" hidden>Please choose a size first.</div>
@@ -361,7 +377,7 @@ export default {
           <button type="button" role="tab" id="tab-details" aria-controls="panel-details" aria-selected="true" class="on">Details</button>
           <button type="button" role="tab" id="tab-size" aria-controls="panel-size" aria-selected="false" tabindex="-1">Size &amp; fit</button>
           <button type="button" role="tab" id="tab-tips" aria-controls="panel-tips" aria-selected="false" tabindex="-1">Try-on tips</button>
-          <button type="button" role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="false" tabindex="-1">Reviews (${esc(p.reviews || 0)})</button>
+          <button type="button" role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="false" tabindex="-1">Reviews${hasReviews ? ` (${esc(Number(p.reviews).toLocaleString('en-US'))})` : ''}</button>
         </div>
         <div class="glass pad pd-panels">
         <div role="tabpanel" id="panel-details" aria-labelledby="tab-details">

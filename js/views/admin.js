@@ -36,39 +36,47 @@ const CSS = `<style>
 .v-admin .adm{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;align-items:start}
 .v-admin .side{padding:10px;position:sticky;top:90px}
 .v-admin .side a{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 14px;border-radius:12px;color:var(--mist);font:600 15px var(--f-body)}
-.v-admin .side a:hover{color:#fff;background:rgba(255,255,255,.05)}
-.v-admin .side a[aria-current="page"]{color:#fff;background:rgba(124,92,255,.26);box-shadow:inset 0 0 0 1px rgba(168,148,255,.45)}
+.v-admin .side a:hover{color:var(--text);background:rgba(47,93,70,0.045)}
+.v-admin .side a[aria-current="page"] .ico{color:var(--violet)}
+.v-admin .side a[aria-current="page"]{color:var(--violet-lo);background:rgba(47,93,70,0.143);box-shadow:inset 0 0 0 1px rgba(47,93,70,0.27)}
 .v-admin .side .sep{height:1px;background:var(--line);margin:8px 6px}
-.v-admin .side .tiny{padding:6px 14px 8px;font-size:13px;color:var(--dim)}
+.v-admin .side .tiny{padding:6px 14px 8px;font-size:13px;color:var(--mist)}
 .v-admin h2.ph{font-size:clamp(22px,2.6vw,28px);margin:0}
 .v-admin .ph-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
 .v-admin .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
 .v-admin .kpi{padding:18px}
-.v-admin .kpi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(124,92,255,.2);border:1px solid rgba(168,148,255,.35);color:var(--violet-hi);margin-bottom:12px}
-.v-admin .kpi b{display:block;font:700 clamp(24px,2.6vw,30px)/1.1 var(--f-display);color:#fff;overflow-wrap:anywhere}
+.v-admin .kpi .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(47,93,70,0.11);border:1px solid rgba(47,93,70,0.21);color:var(--violet-hi);margin-bottom:12px}
+.v-admin .kpi b{display:block;font:700 clamp(24px,2.6vw,30px)/1.1 var(--f-display);color:var(--text);overflow-wrap:anywhere}
 .v-admin .kpi b.price{color:var(--volt)}
-.v-admin .kpi span{font-size:14px;color:var(--dim)}
+.v-admin .kpi span{font-size:14px;color:var(--mist)}
 .v-admin .dash2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-bottom:18px}
 .v-admin .funnel{display:grid;gap:14px}
 .v-admin .fr{display:grid;grid-template-columns:120px minmax(0,1fr) 64px;gap:12px;align-items:center}
 .v-admin .fr .lab{font-size:14px;color:var(--mist)}
-.v-admin .fr .bar{height:30px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--line);overflow:hidden}
+.v-admin .fr .bar{height:30px;border-radius:9px;background:linear-gradient(180deg,#EEF3EE,#E8EFE8);box-shadow:inset 0 1px 2px rgba(47,93,70,.08);border:1px solid var(--line);overflow:hidden}
 .v-admin .fr .bar i{display:block;height:100%;border-radius:8px;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.4);min-width:4px;transition:width .4s}
 .v-admin .fr:nth-child(2) .bar i{opacity:.85}.v-admin .fr:nth-child(3) .bar i{opacity:.7}.v-admin .fr:nth-child(4) .bar i{opacity:.55}
 .v-admin .fr .val{font:700 16px var(--f-display);text-align:right}
-.v-admin .fr .pct{display:block;font:500 12px var(--f-body);color:var(--dim)}
+.v-admin .fr .pct{display:block;font:500 12px var(--f-body);color:var(--mist)}
 .v-admin .tbl td{font-size:15px}
-.v-admin .tbl .nm{display:flex;align-items:center;gap:12px;min-width:200px}
-.v-admin .tbl .nm a{font-weight:600;color:#fff}
-.v-admin .th{width:52px;height:52px;border-radius:12px;flex:none;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E)}
+.v-admin .tbl .nm{display:flex;align-items:center;gap:12px;min-width:180px}
+.v-admin #adm-ptable th,.v-admin #adm-ptable td{padding:10px 8px}
+.v-admin #adm-ptable th:first-child,.v-admin #adm-ptable td:first-child{padding-left:16px}
+.v-admin #adm-ptable th:last-child,.v-admin #adm-ptable td:last-child{padding-right:14px}
+.v-admin #adm-ptable .acts .btn-sm{padding:0 11px}
+.v-admin #adm-ptable td:nth-child(2){white-space:nowrap}
+.v-admin .tbl thead th{background:rgba(232,239,232,.55)}
+.v-admin .tbl tbody tr:hover td{background:rgba(232,239,232,.35)}
+.v-admin .tbl .nm a{font-weight:600;color:var(--text)}
+.v-admin .th{width:52px;height:52px;border-radius:12px;flex:none;overflow:hidden;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2)}
 .v-admin .th svg{width:84%;height:84%}
 .v-admin .tbl tr.off td{opacity:.55}
 .v-admin .tbl tr.off td:last-child{opacity:1}
 .v-admin .acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:nowrap}
-.v-admin .st-live{background:rgba(124,240,195,.14);border-color:rgba(124,240,195,.5);color:var(--ok)}
-.v-admin .st-hid{background:rgba(255,255,255,.06);border-color:var(--line-2);color:var(--mist)}
-.v-admin .st-bad{background:rgba(255,122,138,.14);border-color:rgba(255,122,138,.5);color:var(--danger)}
-.v-admin .tag-custom{background:rgba(255,255,255,.06);border-color:var(--line-2);margin-left:6px}
+.v-admin .st-live{background:rgba(46,139,87,0.14);border-color:rgba(46,139,87,0.5);color:var(--ok)}
+.v-admin .st-hid{background:rgba(47,93,70,0.054);border-color:var(--line-2);color:var(--mist)}
+.v-admin .st-bad{background:rgba(194,65,59,0.14);border-color:rgba(194,65,59,0.5);color:var(--danger)}
+.v-admin .tag-custom{background:rgba(47,93,70,0.054);border-color:var(--line-2);margin-left:6px}
 .v-admin .srch{position:relative;flex:1 1 260px;max-width:360px}
 .v-admin .srch .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--dim)}
 .v-admin .srch .input{padding-left:42px}
@@ -78,47 +86,49 @@ const CSS = `<style>
 .v-admin .pf{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
 .v-admin .pf-sec{margin-bottom:18px}
 .v-admin .pf-sec h3{display:flex;align-items:center;gap:10px;margin-bottom:4px}
-.v-admin .pf-sec h3 .step{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:rgba(124,92,255,.25);border:1px solid rgba(168,148,255,.45);font:700 13px var(--f-display)}
+.v-admin .pf-sec h3 .step{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;background:rgba(47,93,70,0.138);border:1px solid rgba(47,93,70,0.27);font:700 13px var(--f-display)}
 .v-admin .pf-sec>p.small{margin:0 0 16px}
 .v-admin .g2{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .v-admin .g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 14px}
 .v-admin .tpls{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
-.v-admin .tpl{position:relative;display:grid;gap:6px;padding:10px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03);cursor:pointer;text-align:center}
+.v-admin .tpl{position:relative;display:grid;gap:6px;padding:10px;border-radius:14px;border:1px solid var(--line);background:rgba(47,93,70,0.027);cursor:pointer;text-align:center}
 .v-admin .tpl:hover{border-color:var(--line-2)}
-.v-admin .tpl:has(input:checked){border-color:rgba(168,148,255,.8);background:rgba(124,92,255,.16);box-shadow:0 0 0 1px rgba(168,148,255,.5)}
+.v-admin .tpl:has(input:checked){border-color:rgba(47,93,70,0.48);background:rgba(47,93,70,0.088);box-shadow:0 0 0 1px rgba(47,93,70,0.3)}
 .v-admin .tpl:has(input:focus-visible){outline:2px solid var(--violet-hi);outline-offset:2px}
 .v-admin .tpl input{position:absolute;opacity:0;pointer-events:none}
-.v-admin .tpl .mini{aspect-ratio:1;border-radius:10px;background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E);display:grid;place-items:center}
+.v-admin .tpl .mini{position:relative;aspect-ratio:1;border-radius:10px;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2);display:grid;place-items:center}
+.v-admin .tpl .mini::after{content:"";position:absolute;left:22%;right:22%;bottom:10%;height:8%;border-radius:50%;background:radial-gradient(rgba(47,93,70,.18),rgba(47,93,70,0) 70%)}
+.v-admin .tpl .mini svg{position:relative;z-index:1}
 .v-admin .tpl .mini svg{width:80%;height:80%}
 .v-admin .tpl span{font:600 13px var(--f-body);color:var(--mist)}
-.v-admin .tpl:has(input:checked) span{color:#fff}
+.v-admin .tpl:has(input:checked) span{color:var(--violet-lo)}
 .v-admin .crow{display:grid;grid-template-columns:auto 52px minmax(0,1fr) 92px 44px;gap:10px;align-items:center;margin-bottom:10px}
 .v-admin .crow .pick{width:24px;height:24px;accent-color:var(--violet)}
-.v-admin .crow input[type=color]{width:52px;height:46px;padding:4px;border-radius:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.05);cursor:pointer}
+.v-admin .crow input[type=color]{width:52px;height:46px;padding:4px;border-radius:12px;border:1px solid var(--line-2);background:rgba(47,93,70,0.045);cursor:pointer}
 .v-admin .crow code{font-size:13px;color:var(--dim);text-transform:uppercase}
 .v-admin .checks{display:flex;gap:20px;flex-wrap:wrap;min-height:46px;align-items:center}
 .v-admin .photo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
-.v-admin .photo .pv{width:96px;height:96px;border-radius:14px;overflow:hidden;border:1px solid var(--line-2);background:rgba(255,255,255,.04);display:grid;place-items:center;color:var(--dim)}
+.v-admin .photo .pv{width:96px;height:96px;border-radius:14px;overflow:hidden;border:1px solid var(--line-2);background:rgba(47,93,70,0.036);display:grid;place-items:center;color:var(--dim)}
 .v-admin .photo .pv img{width:100%;height:100%;object-fit:cover}
 .v-admin .file-btn{position:relative;overflow:hidden}
 .v-admin .file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .v-admin .file-btn:focus-within{outline:2px solid var(--violet-hi);outline-offset:3px}
 .v-admin .prev{position:sticky;top:90px;padding:16px}
 .v-admin .prev .stage{position:relative;aspect-ratio:1;border-radius:16px;overflow:hidden;display:grid;place-items:center;
-  background:radial-gradient(circle at 50% 38%,#2F2A86 0%,#1A1E4D 45%,#11143A 100%)}
-.v-admin .prev .stage::after{content:"";position:absolute;left:18%;right:18%;bottom:9%;height:9%;border-radius:50%;background:radial-gradient(rgba(0,0,0,.45),rgba(0,0,0,0) 70%)}
-.v-admin .prev .stage>svg{width:78%;height:78%;position:relative;z-index:1;filter:drop-shadow(0 14px 20px rgba(0,0,0,.4))}
+  background:radial-gradient(circle at 50% 38%,#FFFFFF 0%,#EEF3EE 45%,#E2EBE2 100%)}
+.v-admin .prev .stage::after{content:"";position:absolute;left:18%;right:18%;bottom:9%;height:9%;border-radius:50%;background:radial-gradient(rgba(30,43,36,0.158),rgba(30,43,36,0) 70%)}
+.v-admin .prev .stage>svg{width:78%;height:78%;position:relative;z-index:1;filter:drop-shadow(0 14px 20px rgba(30,43,36,0.14))}
 .v-admin .prev .stage>img{position:absolute;inset:0;z-index:1}
-.v-admin .prev .inset{position:absolute;right:10px;bottom:10px;z-index:3;width:38%;aspect-ratio:1;border-radius:14px;border:1px solid var(--line-2);display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E);box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.v-admin .prev .inset{position:absolute;right:10px;bottom:10px;z-index:3;width:38%;aspect-ratio:1;border-radius:14px;border:1px solid var(--line-2);display:grid;place-items:center;align-content:center;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2);box-shadow:0 10px 24px rgba(30,43,36,0.158)}
 .v-admin .prev .inset svg{width:74%;height:auto}
 .v-admin .prev .inset small{font:600 10px var(--f-body);color:var(--mist);margin-top:-2px}
 .v-admin .prev .stage .badge{position:absolute;top:10px;left:10px;z-index:2}
-.v-admin .prev .live{position:absolute;top:10px;right:10px;z-index:2;font:600 12px var(--f-body);padding:4px 10px;border-radius:999px;background:rgba(11,13,33,.65);border:1px solid var(--line-2)}
-.v-admin .prev .pname{font:600 19px var(--f-display);color:#fff;margin:14px 0 2px;overflow-wrap:anywhere}
+.v-admin .prev .live{position:absolute;top:10px;right:10px;z-index:2;font:600 12px var(--f-body);padding:4px 10px;border-radius:999px;color:#fff;background:var(--gloss-violet);border:1px solid rgba(255,255,255,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 4px 12px rgba(47,93,70,.2)}
+.v-admin .prev .pname{font:600 19px var(--f-display);color:var(--text);margin:14px 0 2px;overflow-wrap:anywhere}
 .v-admin .prev .swrow{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
 .v-admin .prev .swrow button{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.3);padding:0}
 .v-admin .prev .swrow button[aria-pressed="true"]{outline:2px solid var(--violet-hi);outline-offset:3px}
-.v-admin .prev .trk{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:14px;color:var(--mist);margin:12px 0}
+.v-admin .prev .trk{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:rgba(47,93,70,0.036);border:1px solid var(--line);font-size:14px;color:var(--mist);margin:12px 0}
 .v-admin .prev .trk .ico{color:var(--violet-hi)}
 .v-admin .savebar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:flex-end;padding:16px}
 .v-admin .err-sum{color:var(--danger);font-size:14px;margin-right:auto}
@@ -206,7 +216,7 @@ function dashboard() {
     <section class="glass pad">
       <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Recent orders</h3><a class="btn btn-sm" href="#admin-orders">All orders ${icon('arrow')}</a></div>
       ${orders.length ? orders.slice(0, 5).map(o => `<div class="mini-order">
-          <div><a href="#order-${esc(o.id)}" style="font-weight:600;color:#fff">#${esc(o.id)}</a><div class="small dim">${esc(fmtDate(o.date))} · ${esc(custName(o))}</div></div>
+          <div><a href="#order-${esc(o.id)}" style="font-weight:600;color:var(--text)">#${esc(o.id)}</a><div class="small dim">${esc(fmtDate(o.date))} · ${esc(custName(o))}</div></div>
           <div style="text-align:right"><span class="price" style="font-size:16px">${money(n0(o.total))}</span><div class="small dim">${esc(o.status || '')}</div></div></div>`).join('')
         : `<p class="note hint" style="margin:8px 0 0">${icon('bag')}<span>No orders yet. Place a test order through checkout and it appears here.</span></p>`}
     </section>
@@ -267,7 +277,7 @@ function ordersPanel() {
       const items = (o.lines || []).reduce((n, l) => n + n0(l.qty || 1), 0);
       const opts = STATUSES.includes(o.status) ? STATUSES : [o.status || 'Confirmed', ...STATUSES];
       return `<tr>
-        <td><a href="#order-${esc(o.id)}" style="font-weight:600;color:#fff;white-space:nowrap">#${esc(o.id)}</a></td>
+        <td><a href="#order-${esc(o.id)}" style="font-weight:600;color:var(--text);white-space:nowrap">#${esc(o.id)}</a></td>
         <td style="white-space:nowrap">${esc(fmtDate(o.date))}</td>
         <td>${esc(custName(o))}${o.address?.city ? `<div class="small dim">${esc(o.address.city)}</div>` : ''}</td>
         <td class="num">${items}</td>
@@ -287,11 +297,11 @@ function freshState(p) {
     sizes: (p.sizes || []).join(', '), price: p.price ?? '', compareAt: p.compareAt || '', stock: p.stock ?? 25, badge: p.badge || '',
     tags: [...(p.tags || [])], desc: p.desc || '', features: (p.features || []).join('\n'), image: p.image || null, lens: p.lens || '#1B1530',
   };
-  return { editing: false, name: '', category: 'hats', model: 'bucket', colors: [{ name: 'Electric Violet', hex: '#7C5CFF' }, { name: 'Ink', hex: '#1C1F3F' }], sel: 0,
+  return { editing: false, name: '', category: 'hats', model: 'bucket', colors: [{ name: 'Forest Sage', hex: '#2F5D46' }, { name: 'Ink', hex: '#1C1F3F' }], sel: 0,
     sizes: DEFAULT_SIZES.hats, price: '', compareAt: '', stock: 25, badge: '', tags: ['new'], desc: '', features: '', image: null, lens: '#1B1530' };
 }
 function fakeProduct(st, hex) { return { name: st.name || 'New product', model: st.model, category: st.category, lens: st.lens, colors: st.colors, image: st.image }; }
-const curHex = st => st.colors[st.sel]?.hex || st.colors[0]?.hex || '#7C5CFF';
+const curHex = st => st.colors[st.sel]?.hex || st.colors[0]?.hex || '#2F5D46';
 
 function tplCards(st) {
   const hex = curHex(st);
@@ -320,7 +330,7 @@ function previewHTML(st) {
       <div class="small dim">${esc(catLabel(st.category))} · ${esc(tplName(st.category, st.model))}</div>
       <div class="swrow" role="group" aria-label="Preview colour">${st.colors.map((c, i) => `<button type="button" data-f="sel" data-i="${i}" style="background:${esc(c.hex)}" aria-pressed="${st.sel === i}" aria-label="${esc(c.name || 'Colour ' + (i + 1))}" title="${esc(c.name)}"></button>`).join('')}</div>
       <div>${price > 0 ? `<span class="price price-lg">${money(price)}${was > price ? `<s>${money(was)}</s>` : ''}</span>` : '<span class="dim">Set a price</span>'}</div>
-      <div class="trk">${icon(ZONE_ICON[zone] || 'cube')}<span><b style="color:#fff">${esc(arLevel(zone).label)}</b><br>${esc(TRACKER[zone])}</span></div>
+      <div class="trk">${icon(ZONE_ICON[zone] || 'cube')}<span><b style="color:var(--text)">${esc(arLevel(zone).label)}</b><br>${esc(TRACKER[zone])}</span></div>
       ${st.image ? `<p class="small dim" style="margin:0 0 10px">Shop cards show your photo. The live try-on still uses the ${esc(tplName(st.category, st.model).toLowerCase())} template in the selected colour.</p>` : ''}
       ${st.editing ? `<a class="btn btn-try btn-block" href="#tryon-${esc(st.id)}">${icon('camera')} Preview try-on</a>`
         : `<button type="button" class="btn btn-try btn-block" disabled>${icon('camera')} Preview try-on</button><p class="small dim" style="margin:8px 0 0;text-align:center">Available after you save.</p>`}
@@ -338,7 +348,7 @@ function formPanel(st) {
         <h3><span class="step">1</span> Basics</h3><p class="small muted">The name becomes the product's web address.</p>
         <div class="field"><label for="f-name">Product name</label><input class="input" id="f-name" name="name" value="${esc(st.name)}" placeholder="e.g. Halo Bucket Hat" maxlength="60"><span class="err" data-err="name"></span></div>
         <div class="field"><label for="f-cat">Category</label><select class="input" id="f-cat" name="category">${cats}</select>
-          <span class="small dim" id="f-zone">Try-on zone is set automatically: <b style="color:#fff">${esc(zoneLabel(CATEGORIES.find(c => c.id === st.category)?.zone))}</b> · ${esc(arLevel(CATEGORIES.find(c => c.id === st.category)?.zone).label)}</span></div>
+          <span class="small dim" id="f-zone">Try-on zone is set automatically: <b style="color:var(--text)">${esc(zoneLabel(CATEGORIES.find(c => c.id === st.category)?.zone))}</b> · ${esc(arLevel(CATEGORIES.find(c => c.id === st.category)?.zone).label)}</span></div>
       </section>
       <section class="glass pad pf-sec">
         <h3><span class="step">2</span> Try-on template</h3><p class="small muted">Pick the AR model shoppers will wear through their camera.</p>
@@ -352,7 +362,7 @@ function formPanel(st) {
         <span class="err" data-err="colors" style="display:block;margin-top:6px"></span>
         <div id="f-lens" ${st.category === 'sunglasses' ? '' : 'hidden'} style="margin-top:14px">
           <div class="field" style="margin:0"><label for="f-lens-c">Lens tint</label>
-          <div class="row"><input type="color" id="f-lens-c" name="lens" value="${esc(st.lens)}" style="width:52px;height:46px;padding:4px;border-radius:12px;border:1px solid var(--line-2);background:rgba(255,255,255,.05)"><span class="small dim">Used for the lenses in artwork and try-on.</span></div></div>
+          <div class="row"><input type="color" id="f-lens-c" name="lens" value="${esc(st.lens)}" style="width:52px;height:46px;padding:4px;border-radius:12px;border:1px solid var(--line-2);background:rgba(47,93,70,0.045)"><span class="small dim">Used for the lenses in artwork and try-on.</span></div></div>
         </div>
         <div class="field" style="margin-top:16px"><label for="f-sizes">Sizes <span class="dim">(comma-separated)</span></label><input class="input" id="f-sizes" name="sizes" value="${esc(st.sizes)}" placeholder="S, M, L"><span class="err" data-err="sizes"></span></div>
       </section>
@@ -456,7 +466,7 @@ function bindForm(root, st) {
       st.category = t.value; st.model = TEMPLATES[st.category][0][0];
       if (!st.sizes.trim() || st.sizes === prevDefault) { st.sizes = DEFAULT_SIZES[st.category]; $('#f-sizes').value = st.sizes; }
       const zone = CATEGORIES.find(c => c.id === st.category).zone;
-      $('#f-zone').innerHTML = `Try-on zone is set automatically: <b style="color:#fff">${esc(zoneLabel(zone))}</b> · ${esc(arLevel(zone).label)}`;
+      $('#f-zone').innerHTML = `Try-on zone is set automatically: <b style="color:var(--text)">${esc(zoneLabel(zone))}</b> · ${esc(arLevel(zone).label)}`;
       $('#f-lens').hidden = st.category !== 'sunglasses';
       refreshTpls(); refreshPrev();
     } else if (t.name === 'model') { st.model = t.value; refreshPrev(); }
@@ -473,7 +483,7 @@ function bindForm(root, st) {
     const a = t.dataset.f;
     if (a === 'addcolor') {
       if (st.colors.length >= 8) return;
-      const palette = ['#A894FF', '#17181F', '#ECE6DA', '#C9324A', '#2E5A43', '#6F8FBF', '#B5532E', '#F2F2F5'];
+      const palette = ['#4E8A6A', '#17181F', '#ECE6DA', '#C9324A', '#2E5A43', '#6F8FBF', '#B5532E', '#F2F2F5'];
       st.colors.push({ name: '', hex: palette[st.colors.length % palette.length] });
       st.sel = st.colors.length - 1; err('colors');
       refreshColors(); refreshTpls(); refreshPrev();
@@ -561,7 +571,7 @@ export default {
     const r = parse(param);
     return `<div class="v-admin">${CSS}<section class="wrap adm-band">
       <div class="adm-top"><div><span class="eyebrow">Store admin</span><h1>RealityStore back office</h1></div>
-        ${S.api.ok ? `<p class="note demo" style="margin:0">${icon('lock')}<span><b style="color:#fff">Signed in as staff</b> — changes go live in the database.</span><button class="btn btn-sm" data-act="admin-signout">Sign out</button></p>` : `<p class="note demo" style="margin:0">${icon('lock')}<span><b style="color:#fff">Offline preview</b> — changes are saved in this browser only.</span></p>`}</div>
+        ${S.api.ok ? `<p class="note demo" style="margin:0">${icon('lock')}<span><b style="color:var(--text)">Signed in as staff</b> — changes go live in the database.</span><button class="btn btn-sm" data-act="admin-signout">Sign out</button></p>` : `<p class="note demo" style="margin:0">${icon('lock')}<span><b style="color:var(--text)">Offline preview</b> — changes are saved in this browser only.</span></p>`}</div>
       <div class="adm">${sidebar(r.tab)}<div id="adm-main">${panel(r)}</div></div>
     </section></div>`;
   },
@@ -598,7 +608,7 @@ export default {
           <div class="row" style="justify-content:flex-end;margin-top:18px">
             <button class="btn btn-ghost" data-close>Keep it</button>
             <button class="btn" data-m="hide">${icon('lock')} Hide instead</button>
-            <button class="btn" data-m="del" style="border-color:rgba(255,122,138,.6);color:var(--danger)">${icon('trash')} Delete</button>
+            <button class="btn" data-m="del" style="border-color:rgba(194,65,59,0.6);color:var(--danger)">${icon('trash')} Delete</button>
           </div></div>`);
         m.el.querySelector('[data-m="del"]').addEventListener('click', () => { m.close(); S.deleteProduct(id); toast(`${p.name} deleted`, 'trash'); });
         m.el.querySelector('[data-m="hide"]').addEventListener('click', () => { m.close(); S.saveProduct({ ...p, hidden: true }); toast(`${p.name} hidden from the shop`, 'lock'); });

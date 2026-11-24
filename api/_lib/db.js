@@ -48,12 +48,13 @@ export const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 let seeded = false;
 export async function ensureSeed() {
   if (seeded) return;
-  const [{ n }] = await sql`SELECT count(*)::int AS n FROM products`;
-  if (n === 0) {
-    for (let i = 0; i < PRODUCTS.length; i++) {
-      const p = PRODUCTS[i];
-      await sql`INSERT INTO products (id, data, hidden, sort) VALUES (${p.id}, ${JSON.stringify({ ...p, stock: 25, custom: false })}::jsonb, false, ${i}) ON CONFLICT (id) DO NOTHING`;
-    }
+  // Insert any catalogue product that isn't in the database yet (first run, or new items added to data.js).
+  // Existing rows — including the admin's edits and hidden products — are never overwritten.
+  const have = new Set((await sql`SELECT id FROM products`).map(r => r.id));
+  for (let i = 0; i < PRODUCTS.length; i++) {
+    const p = PRODUCTS[i];
+    if (have.has(p.id)) continue;
+    await sql`INSERT INTO products (id, data, hidden, sort) VALUES (${p.id}, ${JSON.stringify({ stock: 25, ...p, custom: false })}::jsonb, false, ${i}) ON CONFLICT (id) DO NOTHING`;
   }
   seeded = true;
 }

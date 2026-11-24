@@ -19,16 +19,17 @@ const STYLE = `<style>
 .v-cart .c-sum .kv{font-size:15px}
 .v-cart .c-sum .tot{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding-top:4px}
 .v-cart .c-sum .tot b{font:700 17px var(--f-display)}
-.v-cart .ship{margin:4px 0 16px;padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.v-cart .ship{margin:4px 0 16px;padding:14px;border-radius:14px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,var(--sage))}
+.v-cart .ship.done{border-color:rgba(46,139,87,.35)}
 .v-cart .ship p{margin:0 0 10px;font-size:14px;color:var(--mist);display:flex;gap:8px;align-items:center}
 .v-cart .ship p .ico{color:var(--violet-hi);width:18px;height:18px}
-.v-cart .bar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
-.v-cart .bar i{display:block;height:100%;border-radius:inherit;background:var(--gloss-violet);box-shadow:0 0 12px rgba(124,92,255,.7);transition:width .4s}
+.v-cart .bar{height:8px;border-radius:999px;background:rgba(47,93,70,0.10);overflow:hidden;box-shadow:inset 0 1px 2px rgba(30,43,36,.08)}
+.v-cart .bar i{display:block;height:100%;border-radius:inherit;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.45);transition:width .4s}
 .v-cart .perks{display:grid;gap:0;padding:4px 18px}
 .v-cart .perk{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px;color:var(--mist)}
 .v-cart .perk:last-child{border-bottom:0}
 .v-cart .perk .ico{color:var(--violet-hi);margin-top:1px}
-.v-cart .perk b{color:#fff;font-weight:600;display:block}
+.v-cart .perk b{color:var(--text);font-weight:600;display:block}
 .v-cart .c-actions{display:grid;gap:10px;margin-top:16px}
 .v-cart .c-more{margin-top:clamp(40px,6vw,72px)}
 .v-cart .c-empty{padding:64px 20px}
@@ -73,8 +74,8 @@ function body() {
     <aside class="c-side">
       <div class="glass pad c-sum" aria-labelledby="c-sum-h">
         <h2 id="c-sum-h">Order summary</h2>
-        <div class="ship">
-          <p>${icon('truck')}${left > 0 ? `<span>Add <b class="price" style="font-size:14px">${money(left)}</b> more for free delivery</span>` : '<span><b style="color:#fff">You’ve unlocked free delivery</b></span>'}</p>
+        <div class="ship${left > 0 ? '' : ' done'}">
+          <p>${icon('truck')}${left > 0 ? `<span>Add <b class="price" style="font-size:14px">${money(left)}</b> more for free delivery</span>` : '<span><b style="color:var(--text)">You’ve unlocked free delivery</b></span>'}</p>
           <div class="bar" role="progressbar" aria-label="Progress to free delivery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
         </div>
         <div class="kv"><span class="muted">Subtotal (${count} item${count === 1 ? '' : 's'})</span><span>${money(sub)}</span></div>

@@ -24,43 +24,46 @@ const PAGES = [
 const CSS = `<style>
 .v-info .i-band{padding-top:clamp(26px,4vw,48px)}
 .v-info .i-hero{padding:clamp(24px,4vw,46px);overflow:hidden}
-.v-info .i-hero .orb.a{width:340px;height:340px;right:-110px;top:-170px;background:var(--violet)}
-.v-info .i-hero .orb.b{width:220px;height:220px;left:30%;bottom:-170px;background:var(--violet-lo);opacity:.35}
+.v-info .i-hero{background:linear-gradient(120deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.82) 55%,rgba(232,239,232,.9) 100%)}
+.v-info .i-hero .orb.a{width:380px;height:380px;right:-120px;top:-190px;background:radial-gradient(circle,rgba(143,184,160,.55),rgba(232,239,232,0) 70%);filter:blur(28px);opacity:.9}
+.v-info .i-hero .orb.b{width:260px;height:260px;left:34%;bottom:-180px;background:radial-gradient(circle,rgba(232,239,232,1),rgba(232,239,232,0) 70%);filter:blur(24px);opacity:.9}
 .v-info .i-hero .ic-big{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;background:var(--gloss-violet);margin-bottom:16px;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 26px rgba(124,92,255,.5)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 26px rgba(47,93,70,0.275)}
+.v-info .i-hero .ic-big{color:#fff}
 .v-info .i-hero .ic-big .ico{width:28px;height:28px;color:#fff}
 .v-info .i-hero h1{font-size:clamp(30px,4.4vw,50px);margin-bottom:10px}
 .v-info .i-hero p{max-width:62ch;font-size:17px;margin:0}
 .v-info .i-layout{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start;margin-top:24px}
 .v-info .i-nav{padding:10px;position:sticky;top:90px}
-.v-info .i-nav h4{font:600 13px var(--f-body);color:var(--dim);margin:6px 12px 8px}
+.v-info .i-nav h4{font:600 13px var(--f-body);color:var(--mist);margin:6px 12px 8px}
 .v-info .i-nav a{display:flex;align-items:center;gap:12px;min-height:44px;padding:0 12px;border-radius:12px;color:var(--mist);font:600 15px var(--f-body)}
-.v-info .i-nav a:hover{color:#fff;background:rgba(255,255,255,.05)}
-.v-info .i-nav a[aria-current="page"]{color:#fff;background:rgba(124,92,255,.26);box-shadow:inset 0 0 0 1px rgba(168,148,255,.45)}
+.v-info .i-nav a:hover{color:var(--text);background:rgba(47,93,70,0.045)}
+.v-info .i-nav a[aria-current="page"] .ico{color:var(--violet)}
+.v-info .i-nav a[aria-current="page"]{color:var(--violet-lo);background:rgba(47,93,70,0.143);box-shadow:inset 0 0 0 1px rgba(47,93,70,0.27)}
 .v-info .i-main{display:grid;gap:18px}
 .v-info .i-main h2{font-size:clamp(22px,2.6vw,28px)}
 .v-info .i-main p,.v-info .i-main li{color:var(--mist)}
 .v-info .i-main ul.ticks{list-style:none;padding:0;margin:0;display:grid;gap:12px}
 .v-info .i-main ul.ticks li{display:flex;gap:12px;align-items:flex-start}
 .v-info .i-main ul.ticks li .ico{color:var(--violet-hi);margin-top:2px}
-.v-info .i-main ul.ticks b,.v-info .i-main p b{color:#fff}
+.v-info .i-main ul.ticks b,.v-info .i-main p b{color:var(--text)}
 .v-info .steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .v-info .step{padding:18px}
 .v-info .step .n{font:800 13px var(--f-display);color:var(--violet-hi);display:block;margin-bottom:10px}
-.v-info .step .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(124,92,255,.18);border:1px solid rgba(168,148,255,.35);color:var(--violet-hi);margin-bottom:12px}
+.v-info .step .ic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(47,93,70,0.099);border:1px solid rgba(47,93,70,0.21);color:var(--violet-hi);margin-bottom:12px}
 .v-info .step h3{font-size:17px}
 .v-info .step p{margin:0;font-size:15px}
 .v-info .cards2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .v-info .cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.v-info .mini{padding:18px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.035)}
+.v-info .mini{padding:18px;border-radius:16px;border:1px solid var(--line);background:rgba(47,93,70,0.032)}
 .v-info .mini h3{display:flex;gap:10px;align-items:center;font-size:17px}
 .v-info .mini h3 .ico{color:var(--violet-hi)}
 .v-info .mini p:last-child,.v-info .mini ol:last-child{margin-bottom:0}
 .v-info ol.how{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--mist)}
 .v-info .tbl td:first-child{white-space:nowrap}
-.v-info .lvl{display:inline-block;padding:3px 9px;border-radius:999px;font:700 12px var(--f-body);border:1px solid var(--line-2);background:rgba(255,255,255,.06);white-space:nowrap}
-.v-info .lvl.l3{background:rgba(124,92,255,.3);border-color:rgba(168,148,255,.55)}
-.v-info .lvl.l2{background:rgba(124,92,255,.16);border-color:rgba(168,148,255,.4)}
+.v-info .lvl{display:inline-block;padding:3px 9px;border-radius:999px;font:700 12px var(--f-body);border:1px solid var(--line-2);background:rgba(47,93,70,0.054);white-space:nowrap}
+.v-info .lvl.l3{background:rgba(47,93,70,0.165);border-color:rgba(47,93,70,0.33)}
+.v-info .lvl.l2{background:rgba(47,93,70,0.088);border-color:rgba(47,93,70,0.24)}
 .v-info .cta{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .v-info .cta h2{margin:0 0 4px}
 .v-info .cta p{margin:0}
@@ -71,18 +74,18 @@ const CSS = `<style>
 .v-info .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .v-info .cdet{display:grid;gap:14px}
 .v-info .cdet .r{display:flex;gap:12px;align-items:flex-start}
-.v-info .cdet .r .ic{width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;background:rgba(124,92,255,.18);border:1px solid rgba(168,148,255,.35);color:var(--violet-hi)}
-.v-info .cdet .r b{display:block;color:#fff;overflow-wrap:anywhere}
-.v-info .cdet .r span{font-size:14px;color:var(--dim)}
+.v-info .cdet .r .ic{width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;background:rgba(47,93,70,0.099);border:1px solid rgba(47,93,70,0.21);color:var(--violet-hi)}
+.v-info .cdet .r b{display:block;color:var(--text);overflow-wrap:anywhere}
+.v-info .cdet .r span{font-size:14px;color:var(--mist)}
 .v-info .sample{display:inline-block;font:700 11px var(--f-body);padding:3px 8px;border-radius:999px;border:1px dashed var(--line-2);color:var(--mist);margin-left:6px;vertical-align:middle}
 .v-info .ok-panel{text-align:center;padding:clamp(28px,4vw,48px)}
-.v-info .ok-panel .ok-ic{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:rgba(124,240,195,.14);border:1px solid rgba(124,240,195,.5);color:var(--ok)}
+.v-info .ok-panel .ok-ic{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;display:grid;place-items:center;background:rgba(46,139,87,0.14);border:1px solid rgba(46,139,87,0.5);color:var(--ok)}
 .v-info .ok-panel .ok-ic .ico{width:30px;height:30px}
-.v-info .ok-panel blockquote{margin:16px auto;max-width:52ch;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mist);white-space:pre-wrap;overflow-wrap:anywhere}
+.v-info .ok-panel blockquote{margin:16px auto;max-width:52ch;text-align:left;padding:14px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(47,93,70,0.036);color:var(--mist);white-space:pre-wrap;overflow-wrap:anywhere}
 .v-info .brand{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .v-info .brand .sw{width:auto;height:96px;border-radius:14px;border:1px solid var(--line-2);margin-bottom:12px;display:grid;place-items:center}
 .v-info .brand .sw .price{font-size:26px}
-.v-info .tmpl{display:flex;gap:12px;align-items:flex-start;border-color:rgba(255,122,138,.45);background:rgba(255,122,138,.08)}
+.v-info .tmpl{display:flex;gap:12px;align-items:flex-start;border-color:rgba(194,65,59,0.45);background:rgba(194,65,59,0.08)}
 .v-info .tmpl .ico{color:var(--danger);margin-top:1px}
 .v-info .terms h3{margin-top:4px}
 .v-info .terms section+section{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
@@ -154,7 +157,7 @@ function privacy() {
       ${tick('You stay in control.', 'You can say no, or take back permission at any time in your browser settings.')}
     </ul></section>
     <section class="glass pad"><h2>Why the camera permission?</h2>
-      <p>Your browser will not let any website use the camera without asking you first. When you open try-on, it shows a prompt such as “Allow mirra to use your camera?”. Tap <b>Allow</b> to try things on. If you tap <b>Block</b>, the rest of the store still works normally — you just won't see the live mirror.</p>
+      <p>Your browser will not let any website use the camera without asking you first. When you open try-on, it shows a prompt such as “Allow this site to use your camera?”. Tap <b>Allow</b> to try things on. If you tap <b>Block</b>, the rest of the store still works normally — you just won't see the live mirror.</p>
       <p style="margin:0">The tracking models (the part that finds your face, hands and body) are downloaded once with the page and run locally, so they work without sending your picture anywhere.</p>
     </section>
     <section class="glass pad"><h2>Turn camera access on or off</h2>
@@ -263,7 +266,7 @@ function contactDone(m) {
     <div class="ok-ic">${icon('check')}</div>
     <h2 style="font-size:26px">Thanks, ${esc(m.name.split(' ')[0])} — message received</h2>
     <p class="muted" style="max-width:52ch;margin:0 auto">Your message has reached the RealityStore team. We’ll reply to your email.</p>
-    <blockquote>${m.order ? `<b style="color:#fff">Order #${esc(m.order)}</b>\n` : ''}${esc(m.message)}</blockquote>
+    <blockquote>${m.order ? `<b style="color:var(--text)">Order #${esc(m.order)}</b>\n` : ''}${esc(m.message)}</blockquote>
     <button class="btn" data-info="again">${icon('edit')} Send another message</button>
   </div>`;
 }
@@ -284,7 +287,7 @@ function about() {
       <div class="brand">
         <div><div class="sw" style="background:var(--ink)"></div><h3>Midnight Ink</h3><p class="small" style="margin:0">The dark glass case. A calm base that lets products glow.</p></div>
         <div><div class="sw" style="background:var(--gloss-violet)"></div><h3>Electric Violet</h3><p class="small" style="margin:0">The gloss and the camera. Every try-on button is violet.</p></div>
-        <div><div class="sw" style="background:rgba(255,255,255,.04)"><span class="price">Rs 3,499</span></div><h3>Volt Lime</h3><p class="small" style="margin:0">Kept for prices and buy buttons only — so the thing that costs money is always the brightest thing on screen.</p></div>
+        <div><div class="sw" style="background:rgba(47,93,70,0.036)"><span class="price">Rs 3,499</span></div><h3>Volt Lime</h3><p class="small" style="margin:0">Kept for prices and buy buttons only — so the thing that costs money is always the brightest thing on screen.</p></div>
       </div></section>
     <section class="glass pad"><h2>A note on honesty</h2>
       <p>This is a working store in development. The products, prices and ratings you see are sample data, and there are no customer reviews or press quotes on this site because we have not earned any yet.</p>
@@ -295,7 +298,7 @@ function about() {
 
 function terms() {
   const sec = (h, p) => `<section><h3>${h}</h3><p style="margin:0">${p}</p></section>`;
-  return `<p class="note tmpl" style="margin:0">${icon('lock')}<span><b style="color:#fff">Template — not legal advice.</b> These terms are a plain-language placeholder for a store in development. They must be reviewed and completed by a qualified lawyer before RealityStore takes real orders.</span></p>
+  return `<p class="note tmpl" style="margin:0">${icon('lock')}<span><b style="color:var(--text)">Template — not legal advice.</b> These terms are a plain-language placeholder for a store in development. They must be reviewed and completed by a qualified lawyer before RealityStore takes real orders.</span></p>
     <section class="glass pad terms">
       ${sec('1. Who we are', 'RealityStore is an online store selling accessories and outerwear in Pakistan. Full business name, address and registration details will be added here before launch.')}
       ${sec('2. Using the store', 'You can browse, try products on with your camera and place orders. Please use the site lawfully and do not try to disrupt it or misuse other people’s details.')}

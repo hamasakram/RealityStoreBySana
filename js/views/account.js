@@ -30,59 +30,61 @@ const CSS = `<style>
 .v-account{padding-bottom:20px}
 .v-account .acct-band{padding-top:clamp(26px,4vw,48px)}
 .v-account .acct-hero{display:flex;gap:20px;align-items:center;flex-wrap:wrap;overflow:hidden}
-.v-account .acct-hero .orb{width:280px;height:280px;right:-80px;top:-140px;background:var(--violet)}
+.v-account .acct-hero{background:linear-gradient(120deg,rgba(255,255,255,.96) 0%,rgba(255,255,255,.82) 55%,rgba(232,239,232,.9) 100%)}
+.v-account .acct-hero .orb{width:320px;height:320px;right:-90px;top:-160px;background:radial-gradient(circle,rgba(143,184,160,.55),rgba(232,239,232,0) 70%);filter:blur(28px);opacity:.9}
 .v-account .avatar{width:76px;height:76px;border-radius:24px;flex:none;display:grid;place-items:center;background:var(--gloss-violet);
-  font:800 32px var(--f-display);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 30px rgba(124,92,255,.5)}
+  font:800 32px var(--f-display);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 10px 30px rgba(47,93,70,0.275)}
 .v-account .who{flex:1 1 220px}
 .v-account .who h1{font-size:clamp(26px,3.4vw,38px);margin:0 0 4px;overflow-wrap:anywhere}
 .v-account .who p{margin:0;overflow-wrap:anywhere}
 .v-account .mini-stats{display:flex;gap:10px;flex-wrap:wrap}
-.v-account .mini-stats a{display:grid;gap:0;min-width:92px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.v-account .mini-stats a{display:grid;gap:0;min-width:92px;padding:10px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(47,93,70,0.036)}
 .v-account .mini-stats a:hover{border-color:var(--line-2)}
-.v-account .mini-stats b{font:700 22px var(--f-display);color:#fff}
-.v-account .mini-stats span{font-size:13px;color:var(--dim)}
+.v-account .mini-stats b{font:700 22px var(--f-display);color:var(--text)}
+.v-account .mini-stats span{font-size:13px;color:var(--mist)}
 .v-account .acct-tabs{display:flex;gap:6px;margin:22px 0 22px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
 .v-account .acct-tabs::-webkit-scrollbar{display:none}
 .v-account .acct-tabs a{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 14px;color:var(--mist);font:600 15px var(--f-body);
   border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
-.v-account .acct-tabs a:hover{color:#fff}
-.v-account .acct-tabs a[aria-current="page"]{color:#fff;border-color:var(--violet)}
-.v-account .acct-tabs .n{font:700 12px var(--f-body);min-width:22px;height:22px;padding:0 6px;border-radius:999px;display:inline-grid;place-items:center;background:rgba(124,92,255,.28);color:#fff}
+.v-account .acct-tabs a:hover{color:var(--text)}
+.v-account .acct-tabs a[aria-current="page"]{color:var(--violet-lo);border-color:var(--violet)}
+.v-account .acct-tabs a[aria-current="page"] .ico{color:var(--violet)}
+.v-account .acct-tabs .n{font:700 12px var(--f-body);min-width:22px;height:22px;padding:0 6px;border-radius:999px;display:inline-grid;place-items:center;background:rgba(47,93,70,0.154);color:var(--text)}
 .v-account .auth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:22px;align-items:start}
 .v-account .auth-card{padding:clamp(20px,3vw,34px)}
-.v-account .auth-card .orb{width:220px;height:220px;left:-90px;bottom:-120px;background:var(--violet-lo)}
-.v-account .seg{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);margin-bottom:22px}
+.v-account .auth-card .orb{width:240px;height:240px;left:-100px;bottom:-130px;background:radial-gradient(circle,rgba(232,239,232,1),rgba(232,239,232,0) 70%);filter:blur(24px);opacity:.9}
+.v-account .seg{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:999px;border:1px solid var(--line);background:rgba(47,93,70,0.036);margin-bottom:22px}
 .v-account .seg button{min-height:42px;border:0;border-radius:999px;background:transparent;color:var(--mist);font:600 15px var(--f-display)}
-.v-account .seg button[aria-selected="true"]{background:rgba(124,92,255,.3);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.2)}
+.v-account .seg button[aria-selected="true"]{background:var(--gloss-violet);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px rgba(47,93,70,.22)}
 .v-account .pw{position:relative}
 .v-account .pw .input{padding-right:52px}
 .v-account .pw button{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:44px;height:40px;border:0;background:none;color:var(--dim);display:grid;place-items:center}
-.v-account .pw button:hover{color:#fff}
+.v-account .pw button:hover{color:var(--text)}
 .v-account .perks{display:grid;gap:14px}
 .v-account .perk{display:flex;gap:14px;align-items:flex-start}
-.v-account .perk .ic{width:44px;height:44px;flex:none;border-radius:14px;display:grid;place-items:center;background:rgba(124,92,255,.18);border:1px solid rgba(168,148,255,.35);color:var(--violet-hi)}
+.v-account .perk .ic{width:44px;height:44px;flex:none;border-radius:14px;display:grid;place-items:center;background:rgba(47,93,70,0.099);border:1px solid rgba(47,93,70,0.21);color:var(--violet-hi)}
 .v-account .perk h3{font-size:16px;margin:2px 0 2px}
 .v-account .perk p{margin:0;color:var(--mist);font-size:15px}
 .v-account .orders{display:grid;gap:12px}
 .v-account .order{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:18px;align-items:center;padding:16px 18px}
 .v-account .order .thumbs{display:flex}
-.v-account .order .thumbs span{width:54px;height:54px;border-radius:14px;margin-left:-12px;border:2px solid #14173E;overflow:hidden;
-  background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E);display:grid;place-items:center}
+.v-account .order .thumbs span{width:54px;height:54px;border-radius:14px;margin-left:-12px;border:2px solid #E2EBE2;overflow:hidden;
+  background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2);display:grid;place-items:center}
 .v-account .order .thumbs span:first-child{margin-left:0}
 .v-account .order .thumbs svg{width:82%;height:82%}
-.v-account .order .num{font:600 17px var(--f-display);color:#fff}
-.v-account .order .meta{display:flex;gap:6px 12px;flex-wrap:wrap;color:var(--dim);font-size:14px}
+.v-account .order .num{font:600 17px var(--f-display);color:var(--text)}
+.v-account .order .meta{display:flex;gap:6px 12px;flex-wrap:wrap;color:var(--mist);font-size:14px}
 .v-account .order .right{display:grid;justify-items:end;gap:6px}
-.v-account .badge.st{background:rgba(124,92,255,.22)}
-.v-account .badge.st-ok{background:rgba(124,240,195,.14);border-color:rgba(124,240,195,.5);color:var(--ok)}
-.v-account .badge.st-bad{background:rgba(255,122,138,.14);border-color:rgba(255,122,138,.5);color:var(--danger)}
-.v-account .badge.st-move{background:rgba(255,255,255,.08);border-color:var(--line-2)}
+.v-account .badge.st{background:rgba(47,93,70,0.121)}
+.v-account .badge.st-ok{background:rgba(46,139,87,0.14);border-color:rgba(46,139,87,0.5);color:var(--ok)}
+.v-account .badge.st-bad{background:rgba(194,65,59,0.14);border-color:rgba(194,65,59,0.5);color:var(--danger)}
+.v-account .badge.st-move{background:rgba(47,93,70,0.072);border-color:var(--line-2)}
 .v-account .looks{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:18px}
 .v-account .look{padding:12px;border-radius:20px;display:flex;flex-direction:column}
-.v-account .look .shot{aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:#05060f;border:1px solid var(--line)}
+.v-account .look .shot{aspect-ratio:3/4;border-radius:14px;overflow:hidden;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2);border:1px solid var(--line)}
 .v-account .look .shot img{width:100%;height:100%;object-fit:cover}
 .v-account .look .info{padding:12px 4px 10px;display:grid;gap:2px}
-.v-account .look .info a{font:600 16px var(--f-display);color:#fff}
+.v-account .look .info a{font:600 16px var(--f-display);color:var(--text)}
 .v-account .look .acts{display:flex;gap:8px;margin-top:auto}
 .v-account .look .acts .btn-try{flex:1}
 .v-account .look .acts .icon-btn{width:44px;height:44px;flex:none}
@@ -242,7 +244,7 @@ function looksTab() {
       </div>
       <div class="acts">
         ${p && !p.hidden ? `<a class="btn btn-try btn-sm" href="#tryon-${esc(p.id)}">${icon('camera')} Try again</a>` : ''}
-        <a class="icon-btn" href="${esc(l.img)}" download="mirra-look-${i + 1}.jpg" aria-label="Download snapshot">${icon('download')}</a>
+        <a class="icon-btn" href="${esc(l.img)}" download="realitystore-look-${i + 1}.jpg" aria-label="Download snapshot">${icon('download')}</a>
         <button class="icon-btn" data-acc="rmlook" data-i="${i}" aria-label="Remove snapshot">${icon('trash')}</button>
       </div>
     </article>`;

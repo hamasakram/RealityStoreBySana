@@ -7,8 +7,10 @@ export default {
   render() {
     return `<div class="v-alog"><style>
 .v-alog .card{max-width:460px;margin:clamp(40px,8vw,90px) auto;display:grid;gap:14px}
-.v-alog .badge-ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 12px 30px rgba(124,92,255,.5)}
-.v-alog .badge-ic .ico{width:30px;height:30px}
+.v-alog .badge-ic{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;color:#fff;border:2px solid rgba(255,255,255,.7);background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 12px 30px rgba(47,93,70,0.275)}
+.v-alog .badge-ic .ico{width:30px;height:30px;color:#fff}
+.v-alog .card{background:linear-gradient(160deg,rgba(255,255,255,.97),rgba(255,255,255,.8) 60%,rgba(232,239,232,.85))}
+.v-alog .card>a.small{color:var(--violet-hi);font-weight:600;justify-self:start}
 </style><section class="wrap"><form class="glass pad card" id="alog" novalidate>
   <div class="badge-ic">${icon('lock')}</div>
   <div><span class="eyebrow">Store admin</span><h1 style="font-size:32px;margin:0">Staff sign-in</h1></div>

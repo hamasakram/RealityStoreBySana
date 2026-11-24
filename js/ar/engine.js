@@ -194,7 +194,7 @@ export class TryOnEngine {
     x.restore();
     // brand strip
     const pad = Math.round(c.width * 0.02), fs = Math.max(14, Math.round(c.width * 0.022));
-    x.fillStyle = 'rgba(11,13,33,.72)'; x.fillRect(0, c.height - fs * 2.4, c.width, fs * 2.4);
+    x.fillStyle = 'rgba(30,43,36,0.72)'; x.fillRect(0, c.height - fs * 2.4, c.width, fs * 2.4);
     x.fillStyle = '#fff'; x.font = `700 ${fs}px Poppins, sans-serif`; x.textBaseline = 'middle';
     x.fillText('RealityStore · ' + (label || ''), pad, c.height - fs * 1.2);
     return c.toDataURL('image/jpeg', 0.85);

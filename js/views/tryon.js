@@ -31,7 +31,7 @@ export default {
   title: param => { const p = param && S.product(param); return p ? `Try on ${p.name}` : 'Try-On Studio'; },
   render(param) {
     const p = pick(param);
-    state = { p, color: p.colors?.[0] || { name: '', hex: '#7C5CFF' }, size: p.sizes?.[0] || '', zone: p.zone, tracked: new Set() };
+    state = { p, color: p.colors?.[0] || { name: '', hex: '#2F5D46' }, size: p.sizes?.[0] || '', zone: p.zone, tracked: new Set() };
     return `<div class="v-tryon">
 <style>
 .v-tryon .layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:22px;align-items:start}
@@ -39,41 +39,55 @@ export default {
 .v-tryon .top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:18px 0 14px}
 .v-tryon .top h1{font-size:clamp(26px,3.4vw,38px);margin:0}
 .v-tryon .ar-stage{max-height:min(78vh,760px)}
-.v-tryon .ov{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:22px;text-align:center;
-  background:radial-gradient(420px 320px at 50% 40%,rgba(124,92,255,.28),rgba(124,92,255,0) 70%),linear-gradient(180deg,#141743,#090B1D)}
+.v-tryon .ar-stage{background-clip:padding-box}
+.v-tryon .ar-stage:has(.ov:not([hidden])){background:#F4F0E8;border-color:rgba(47,93,70,.18);box-shadow:0 24px 60px rgba(47,93,70,.12),0 2px 8px rgba(30,43,36,.05)}
+.v-tryon .ov{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding:22px;text-align:center;color:var(--text);
+  background:linear-gradient(180deg,rgba(255,255,255,.7),rgba(255,255,255,0) 42%),
+    radial-gradient(460px 340px at 50% 36%,rgba(232,239,232,.95),rgba(232,239,232,0) 70%),
+    radial-gradient(600px 420px at 100% 100%,rgba(143,184,160,.22),rgba(143,184,160,0) 65%),
+    linear-gradient(165deg,#FDFBF7 0%,#F6F2EA 55%,#E8EFE8 100%)}
+.v-tryon .ov::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;box-shadow:inset 0 1px 0 rgba(255,255,255,.9),inset 0 0 0 1px rgba(255,255,255,.4)}
+.v-tryon .ov .spinner{border-color:rgba(47,93,70,.16);border-top-color:var(--violet)}
 .v-tryon .ov[hidden]{display:none}
 .v-tryon .ov .in{max-width:420px;display:grid;gap:12px;justify-items:center}
-.v-tryon .ov .cam{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 14px 40px rgba(124,92,255,.55)}
+.v-tryon .ov .cam{width:86px;height:86px;border-radius:50%;display:grid;place-items:center;color:#fff;background:var(--gloss-violet);border:3px solid rgba(255,255,255,.85);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 14px 40px rgba(47,93,70,0.28)}
 .v-tryon .ov .cam .ico{width:40px;height:40px;stroke-width:1.6}
 .v-tryon .ov h2{font-size:clamp(22px,3vw,30px);margin:6px 0 0}
 .v-tryon .ov p{color:var(--mist);margin:0}
 .v-tryon .ov .tiny{font-size:13px;color:var(--dim);display:flex;flex-wrap:wrap;justify-content:center;gap:4px 6px;align-items:center}
 .v-tryon .ov .tiny .ico{width:15px;height:15px}
-.v-tryon .ghost-art{width:160px;height:160px;opacity:.95;filter:drop-shadow(0 16px 26px rgba(0,0,0,.45));animation:floaty 4s ease-in-out infinite}
+.v-tryon .ghost-wrap{position:relative;display:grid;place-items:center;width:200px;height:180px}
+.v-tryon .ghost-wrap::before{content:"";position:absolute;left:18px;right:18px;bottom:8px;height:34px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(255,255,255,.95),#E2EBE2 70%,rgba(220,230,220,0));box-shadow:0 10px 24px rgba(47,93,70,.12)}
+.v-tryon .ghost-art{position:relative;width:160px;height:160px;opacity:.97;filter:drop-shadow(0 16px 22px rgba(47,93,70,.16));animation:floaty 4s ease-in-out infinite}
+.v-tryon .ov .tiny a{color:var(--violet-hi);font-weight:600}
+.v-tryon .ov p b{color:var(--violet-lo)}
 @keyframes floaty{50%{transform:translateY(-8px) rotate(-2deg)}}
 .v-tryon .corners .ar-corner{opacity:.7}
 .v-tryon .tl{top:16px;left:16px;border-right:0;border-bottom:0;border-radius:10px 0 0 0}.v-tryon .tr{top:16px;right:16px;border-left:0;border-bottom:0;border-radius:0 10px 0 0}
 .v-tryon .bl{bottom:84px;left:16px;border-right:0;border-top:0;border-radius:0 0 0 10px}.v-tryon .br{bottom:84px;right:16px;border-left:0;border-top:0;border-radius:0 0 10px 0}
-.v-tryon .pill{position:absolute;top:16px;left:62px;padding:6px 12px;border-radius:999px;background:rgba(11,13,33,.72);border:1px solid var(--line-2);font:700 12px var(--f-body)}
-.v-tryon .ar-hint{top:auto;bottom:86px}
+.v-tryon .pill{position:absolute;top:16px;left:62px;padding:6px 12px;border-radius:999px;color:#fff;background:rgba(30,43,36,0.72);border:1px solid rgba(255,255,255,.22);font:700 12px var(--f-body)}
+.v-tryon .ar-hint{top:auto;bottom:86px;background:rgba(30,43,36,0.72)}
 .v-tryon .ctrl{position:absolute;left:0;right:0;bottom:0;padding:14px;display:flex;justify-content:center;align-items:center;gap:14px;
-  background:linear-gradient(180deg,rgba(5,6,15,0),rgba(5,6,15,.75))}
-.v-tryon .ctrl .icon-btn{width:50px;height:50px;background:rgba(11,13,33,.7);border-color:var(--line-2)}
-.v-tryon .shutter{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:var(--gloss-violet);box-shadow:0 0 0 4px rgba(124,92,255,.35),0 10px 26px rgba(0,0,0,.5)}
+  background:linear-gradient(180deg,rgba(30,43,36,0),rgba(30,43,36,0.45))}
+.v-tryon .ctrl .icon-btn{width:50px;height:50px;color:#fff;background:rgba(30,43,36,0.7);border-color:rgba(255,255,255,.25)}
+.v-tryon .ctrl .icon-btn:hover{background:rgba(30,43,36,0.85)}
+.v-tryon .ar-hint{color:#fff;border-color:rgba(255,255,255,.2)}
+.v-tryon .shutter{width:66px;height:66px;border-radius:50%;border:4px solid #fff;background:var(--gloss-violet);box-shadow:0 0 0 4px rgba(47,93,70,0.193),0 10px 26px rgba(30,43,36,0.175)}
 .v-tryon .shutter:active{transform:scale(.95)}
 .v-tryon .panel{display:grid;gap:16px}
 .v-tryon .pinfo{display:grid;grid-template-columns:84px 1fr;gap:14px;align-items:center}
-.v-tryon .pinfo .th{width:84px;height:84px;border-radius:16px;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E)}
+.v-tryon .pinfo .th{width:84px;height:84px;border-radius:16px;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2)}
 .v-tryon .pinfo .th svg{width:82%;height:82%}
 .v-tryon .pinfo h2{font-size:21px;margin:0 0 2px}
 .v-tryon .opts{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.v-tryon .label{font:600 13px var(--f-body);color:var(--dim);margin-bottom:8px;display:block}
+.v-tryon .label{font:600 13px var(--f-body);color:var(--mist);margin-bottom:8px;display:block}
 .v-tryon .ztabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
 .v-tryon .ztabs .chip{flex:none}
 .v-tryon .rail{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 8px}
-.v-tryon .mini{flex:none;width:118px;scroll-snap-align:start;border-radius:14px;padding:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);text-align:left;display:grid;gap:4px}
-.v-tryon .mini.on{border-color:rgba(168,148,255,.75);background:rgba(124,92,255,.16)}
-.v-tryon .mini .a{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#2F2A86,#14173E)}
+.v-tryon .mini{flex:none;width:118px;scroll-snap-align:start;border-radius:14px;padding:8px;border:1px solid var(--line);background:rgba(47,93,70,0.036);text-align:left;display:grid;gap:4px}
+.v-tryon .mini.on{border-color:rgba(47,93,70,0.45);background:rgba(47,93,70,0.088)}
+.v-tryon .mini .a{aspect-ratio:1;border-radius:10px;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2)}
 .v-tryon .mini .a svg{width:80%;height:80%}
 .v-tryon .mini b{font:600 12.5px var(--f-display);line-height:1.2}
 .v-tryon .mini .price{font-size:13px}
@@ -103,7 +117,7 @@ export default {
         </div>
         <div class="ov" id="ov-intro">
           <div class="in">
-            <div class="ghost-art" id="ghost">${productArt(p, state.color.hex)}</div>
+            <div class="ghost-wrap"><div class="ghost-art" id="ghost">${productArt(p, state.color.hex)}</div></div>
             <h2>Let’s see it on you</h2>
             <p id="intro-tip">${esc(arLevel(p.zone).tip)} We need your camera to place the <b>${esc(p.name)}</b> on you.</p>
             <button class="btn btn-try btn-lg" id="start">${icon('camera')} Allow camera &amp; start</button>
@@ -111,7 +125,7 @@ export default {
           </div>
         </div>
         <div class="ov" id="ov-load" hidden><div class="in"><div class="spinner"></div><h2 id="load-title">Opening your camera…</h2><p id="load-sub">Your browser will ask for permission.</p></div></div>
-        <div class="ov" id="ov-err" hidden><div class="in"><div class="cam" style="background:linear-gradient(180deg,#3A3F7A,#1A1E4D)">${icon('camera')}</div><h2 id="err-title"></h2><p id="err-text"></p>
+        <div class="ov" id="ov-err" hidden><div class="in"><div class="cam">${icon('camera')}</div><h2 id="err-title"></h2><p id="err-text"></p>
           <div class="row" style="justify-content:center"><button class="btn btn-try" id="retry">${icon('refresh')} Try again</button><a class="btn" href="#p-${esc(p.id)}" id="err-product">View product</a></div></div></div>
       </div>
     </div>
@@ -146,7 +160,7 @@ export default {
         <div class="pinfo"><div class="th">${productArt(p, color.hex)}</div>
           <div><span class="small dim">${esc(catLabel(p.category))} · ${esc(arLevel(p.zone).label)}</span><h2>${esc(p.name)}</h2>${priceTag(p)}</div></div>
         <hr class="hr">
-        ${p.colors?.length ? `<span class="label">Colour · <span style="color:#fff">${esc(color.name)}</span></span>
+        ${p.colors?.length ? `<span class="label">Colour · <span style="color:var(--text)">${esc(color.name)}</span></span>
         <div class="opts" id="colors">${p.colors.map((c, i) => `<button class="sw sw-lg ${c.name === color.name ? 'on' : ''}" style="background:${esc(c.hex)}" data-i="${i}" aria-label="${esc(c.name)}" aria-pressed="${c.name === color.name}"></button>`).join('')}</div>` : ''}
         ${p.sizes?.length > 1 ? `<span class="label" style="margin-top:14px">Size</span><div class="opts" id="sizes">${p.sizes.map(s => `<button class="chip ${s === size ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
         <div class="buyrow" style="margin-top:16px">
@@ -230,7 +244,7 @@ export default {
       let url;
       try { url = engine.snapshot(`${state.p.name} · ${state.color.name}`); } catch (e) { toast('Couldn’t take a snapshot', 'camera'); return; }
       stage.animate?.([{ filter: 'brightness(2)' }, { filter: 'none' }], { duration: 260 });
-      const fname = `mirra-${state.p.id}.jpg`;
+      const fname = `realitystore-${state.p.id}.jpg`;
       const m = openModal(`<div class="pad" style="display:grid;gap:14px">
         <div class="row between"><h3 style="margin:0">Your look</h3><button class="icon-btn" data-close aria-label="Close">${icon('x')}</button></div>
         <img src="${url}" alt="Snapshot wearing ${esc(state.p.name)}" style="width:100%;border-radius:16px;border:1px solid var(--line)">

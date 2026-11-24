@@ -102,13 +102,14 @@ function chips(f, param) {
 
 const CSS = `<style>
 .v-shop .shop-head{position:relative;padding:4px 0 8px}
-.v-shop .shop-head .orb{width:420px;height:420px;right:-160px;top:-180px;background:#6A4DF0;opacity:.35}
+.v-shop .shop-head .orb{width:520px;height:420px;right:-200px;top:-200px;filter:none;opacity:1;
+  background:radial-gradient(closest-side,rgba(143,184,160,.32),rgba(143,184,160,0))}
 .v-shop .breadcrumbs{margin:22px 0 14px}
 .v-shop .breadcrumbs .here{color:var(--mist)}
 .v-shop .title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px 24px;flex-wrap:wrap}
 .v-shop h1{font-size:clamp(30px,4vw,46px);margin:0}
 .v-shop .title-ico{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;margin-right:14px;vertical-align:middle;background:var(--gloss-violet);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 22px rgba(124,92,255,.45)}
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 22px rgba(47,93,70,0.248)}
 .v-shop .title-ico .ico{width:26px;height:26px;color:#fff}
 .v-shop .title-wrap{display:flex;align-items:center}
 .v-shop{overflow-x:clip}
@@ -117,7 +118,7 @@ const CSS = `<style>
   font:600 15px var(--f-body);color:var(--mist);text-align:left}
 .v-shop .ar-note{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px;max-width:720px}
 .v-shop .ar-note .ico{color:var(--violet-hi)}
-.v-shop .ar-note b{color:#fff;font-weight:600}
+.v-shop .ar-note b{color:var(--text);font-weight:600}
 .v-shop .ar-note .lv{display:inline-flex;align-items:center;gap:8px}
 
 .v-shop .filters{position:relative;margin:22px 0 22px;padding:14px;border-radius:20px;display:grid;gap:12px}
@@ -130,7 +131,7 @@ const CSS = `<style>
 .v-shop .search .ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--dim);pointer-events:none}
 .v-shop .search .input{padding-left:44px;padding-right:44px}
 .v-shop .search .x{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;border-radius:50%;display:grid;place-items:center;color:var(--mist)}
-.v-shop .search .x:hover{color:#fff;background:rgba(255,255,255,.08)}
+.v-shop .search .x:hover{color:var(--text);background:rgba(47,93,70,0.072)}
 .v-shop .search .x[hidden]{display:none}
 .v-shop .sortbox{display:flex;align-items:center;gap:10px}
 .v-shop .sortbox label{font:600 14px var(--f-body);color:var(--mist);white-space:nowrap}
@@ -138,11 +139,12 @@ const CSS = `<style>
 .v-shop .prices{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .v-shop .prices .lbl{flex:none;font:600 14px var(--f-body);color:var(--mist);margin-right:4px}
 .v-shop .prices .chip{background:transparent;cursor:pointer}
-.v-shop .prices .chip.on{background:rgba(124,92,255,.28)}
+.v-shop .prices .chip.on{background:var(--gloss-violet)}
 .v-shop .meta-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .v-shop .reset{background:none;border:0;color:var(--violet-hi);font:600 14px var(--f-body);padding:10px 4px;min-height:44px;text-decoration:underline;text-underline-offset:3px}
 .v-shop .reset[hidden],.v-shop .meta-row[hidden]{display:none}
 .v-shop .empty{border-radius:22px}
+.v-shop .empty>.ico{color:var(--violet-hi)}
 .v-shop .empty .btn .ico{width:20px;height:20px;margin:0;color:#fff}
 .v-shop .search input::-webkit-search-cancel-button{-webkit-appearance:none;appearance:none}
 .v-shop .empty p{max-width:46ch;margin:0 auto 18px}
@@ -150,7 +152,7 @@ const CSS = `<style>
   .v-shop .title-ico{width:44px;height:44px;border-radius:14px;margin-right:12px}
   .v-shop .title-ico .ico{width:22px;height:22px}
   .v-shop .filters{padding:12px;margin:18px 0}
-  .v-shop .chips,.v-shop .prices{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -12px;padding:2px 12px;
+  .v-shop .chips,.v-shop .prices{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:-4px -12px -8px;padding:4px 12px 10px;
     -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent)}
   .v-shop .chips::-webkit-scrollbar,.v-shop .prices::-webkit-scrollbar{display:none}
   .v-shop .chip{flex:none}

@@ -2,6 +2,21 @@
 // Every product has a `model` that both the SVG artwork and the AR engine understand.
 // zone decides the tracker: head/face -> face tracker, hands -> hand tracker, body/feet -> pose tracker.
 
+// ---------------- PREVIEW / VOTING MODE ----------------
+// While PREVIEW.on is true the store shows ONE product per category, has no buying, and asks visitors to
+// try on and vote. Swap the ids in `lineup` when new test products arrive; set on:false to open the real shop.
+export const PREVIEW = {
+  on: true,
+  lineup: {
+    hats: 'navy-slouchy-ribbed-beanie',
+    sunglasses: 'black-metal-aviator',
+    jackets: 'navy-quilted-puffer-jacket',
+    gloves: 'charcoal-knit-gloves',
+    shoes: ['black-neon-mid-trainer', 'black-logo-slides'],   // two footwear styles in the test
+    socks: 'charcoal-cotton-crew-socks',
+  },
+};
+
 export const ZONES = [
   { id: 'head', label: 'Head', blurb: 'Hats & caps', cats: ['hats'] },
   { id: 'face', label: 'Face', blurb: 'Sunglasses', cats: ['sunglasses'] },
@@ -264,6 +279,56 @@ PRODUCTS.push(
     features: ['Fluffy wool-blend rib knit', 'Slouchy fit with fold-back cuff', 'Stretches to 54–60 cm', 'Hand wash'] }),
 );
 
+// ---------- Preview line-up from the owner's supplier (photos supplied by the owner) ----------
+// Names, sizes and expected prices are first drafts — the owner will confirm them.
+PRODUCTS.push(
+  T({ id: 'navy-slouchy-ribbed-beanie', name: 'Navy Slouchy Ribbed Beanie', category: 'hats', zone: 'head', model: 'slouchy', price: 1190,
+    colors: [C('Navy', '#1F2A44')], sizes: ['One size 54–60 cm'],
+    image: 'img/products/navy-slouchy-beanie.jpg', arTex: { knit: 'img/products/navy-slouchy-beanie-knit.jpg' },
+    desc: 'Soft fine-rib beanie with a relaxed slouch at the back — easy to wear all winter.',
+    features: ['Fine rib knit', 'Relaxed slouchy fit', 'Stretches to 54–60 cm', 'Hand wash'] }),
+  T({ id: 'black-metal-aviator', name: 'Black Metal Aviator Sunglasses', category: 'sunglasses', zone: 'face', model: 'aviator', price: 2490,
+    colors: [C('Black', '#1A1A1C')], lens: '#3A3B40', sizes: ['58 mm'],
+    image: 'img/products/black-aviator.jpg',
+    desc: 'Classic double-bridge aviator in a slim black metal frame with smoke-grey lenses.',
+    features: ['Smoke grey lenses, UV400', 'Slim black metal frame', 'Double bridge', 'Adjustable nose pads'] }),
+  T({ id: 'charcoal-knit-gloves', name: 'Charcoal Knit Gloves', category: 'gloves', zone: 'hands', model: 'knit', price: 890,
+    colors: [C('Charcoal', '#3B3B3D')], sizes: ['S/M 18–20 cm', 'L/XL 21–23 cm'],
+    image: 'img/products/charcoal-knit-gloves.jpg', arTex: { knit: 'img/products/charcoal-knit-gloves-knit.jpg' },
+    desc: 'Warm marled-knit winter gloves with a snug ribbed cuff.',
+    features: ['Marled stretch knit', 'Ribbed cuff', 'Full fingers', 'Size by palm circumference'] }),
+  T({ id: 'charcoal-cotton-crew-socks', name: 'Charcoal Cotton Crew Socks', category: 'socks', zone: 'feet', model: 'crew', price: 450,
+    colors: [C('Charcoal', '#3A3A3C')], sizes: ['EU 39–42 / UK 6–8', 'EU 43–46 / UK 9–11'],
+    image: 'img/products/charcoal-crew-socks.jpg', arTex: { knit: 'img/products/charcoal-crew-socks-knit.jpg' },
+    desc: 'Everyday marled cotton crew socks with a ribbed cuff.',
+    features: ['Soft cotton blend', 'Ribbed cuff', 'Reinforced heel and toe', '1 pair'] }),
+  T({ id: 'navy-quilted-puffer-jacket', name: 'Navy Quilted Puffer Jacket', category: 'jackets', zone: 'body', model: 'puffer', price: 6990,
+    colors: [C('Navy', '#2C3344')], sizes: ['S', 'M', 'L', 'XL'],
+    image: 'img/products/navy-puffer-jacket.jpg', arTex: { fabric: 'img/products/navy-puffer-jacket-fabric.jpg' },
+    desc: 'Lightweight channel-quilted puffer with a stand collar, full zip and zip pockets.',
+    features: ['Channel quilting', 'Stand-up collar', 'Full-length zip', 'Two zip hand pockets'] }),
+);
+
+// ---------- Footwear from the owner's supplier (with the supplier's size charts) ----------
+const TRAINER_CHART = [['5','39','26'],['6','40','26.7'],['7','41','27.3'],['8','42','28'],['9','43','28.7'],['10','44','29.3'],['11','45','30']];
+const SLIDE_CHART = [['36','23.4'],['37','24.1'],['38','24.8'],['39','25.4'],['40','26.1'],['41','26.7'],['42','27.4'],['43','28.1'],['44','28.7'],['45','29.4']];
+PRODUCTS.push(
+  T({ id: 'black-neon-mid-trainer', name: 'Black & Neon Mid-Top Trainer', category: 'shoes', zone: 'feet', model: 'hightop', price: 7990,
+    colors: [C('Black / Neon Green', '#1E2022')], accent: '#9BE22D', sole: '#F2F2F0',
+    sizes: TRAINER_CHART.map(([uk, eu, cm]) => `EU ${eu} · UK ${uk} (${cm} cm)`),
+    sizeChart: { columns: ['UK', 'EU', 'Foot length (cm)'], rows: TRAINER_CHART, note: 'Measure your foot from heel to longest toe.' },
+    image: 'img/products/black-neon-mid-trainer.jpg',
+    desc: 'Mid-top trail-style trainer with a perforated black upper, padded ankle collar, neon-green accents and a cushioned white midsole.',
+    features: ['Perforated textile upper', 'Padded mid-top collar with strap', 'Cushioned white midsole', 'Grippy rubber outsole'] }),
+  T({ id: 'black-logo-slides', name: 'Black Logo Slides', category: 'shoes', zone: 'feet', model: 'slide', price: 1990,
+    colors: [C('Black', '#141416')], accent: '#F2F2F0',
+    sizes: SLIDE_CHART.map(([eu, cm]) => `EU ${eu} (${cm} cm)`),
+    sizeChart: { columns: ['EU size', 'Foot length (cm)'], rows: SLIDE_CHART, note: 'Measure your foot from heel to longest toe.' },
+    image: 'img/products/black-logo-slides.jpg',
+    desc: 'Comfortable one-strap slides with a soft moulded footbed and a bold printed logo strap.',
+    features: ['Soft moulded footbed', 'Wide padded strap with printed logo', 'Water-friendly', 'Easy slip-on'] }),
+);
+
 // ---------------- colour helpers ----------------
 export function shade(hex, amt) {
   // amt -1..1 : negative darkens, positive lightens
@@ -332,7 +397,7 @@ export function art(product, colorHex) {
 
     case 'bomber': case 'denim': case 'puffer': body = jacket(product.model, c, V, H, lo, lo2, hi, shine); break;
     case 'knit': case 'leather': case 'sport': body = glove(product.model, c, V, lo, lo2, hi, shine); break;
-    case 'runner': case 'hightop': case 'loafer': body = shoe(product.model, c, V, H, lo, lo2, hi, shine); break;
+    case 'runner': case 'hightop': case 'loafer': case 'slide': body = shoe(product.model, c, V, H, lo, lo2, hi, shine); break;
     case 'crew': case 'stripe': case 'ankle': body = sock(product.model, c, V, lo, lo2, hi, shine); break;
     default: body = `<circle cx="100" cy="100" r="60" fill="${R}"/>`;
   }
@@ -402,6 +467,11 @@ function glove(kind, c, V, lo, lo2, hi, shine) {
 function shoe(kind, c, V, H, lo, lo2, hi, shine) {
   const light = isLight(c);
   const sole = light ? '#C9CBD6' : '#ECEDF3';
+  if (kind === 'slide') return `
+    <path d="M14 150h172c4 0 6 6 2 10-4 4-10 6-16 6H28c-8 0-14-6-14-16z" fill="${lo2}"/>
+    <path d="M18 146h166v6H18z" fill="${lo}"/>
+    <path d="M70 146c2-30 14-48 40-50 26 2 40 20 44 50z" fill="${V}"/>
+    <path d="M86 122h50" stroke="#F2F2F0" stroke-width="8" stroke-linecap="round"/>`;
   if (kind === 'loafer') return `
     <path d="M18 132c0-14 8-26 22-28 20-2 30 6 54 8 30 2 60 2 78 14 10 6 12 16 8 22H22c-4-4-4-10-4-16z" fill="${V}"/>
     <path d="M18 148h162v10c0 4-4 6-8 6H24c-4 0-6-2-6-6z" fill="${lo2}"/>

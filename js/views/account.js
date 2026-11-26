@@ -4,12 +4,20 @@ import * as S from '../store.js';
 import { esc, money, icon, productCard, productArt, toast, catLabel } from '../ui.js';
 
 let authMode = 'in'; // 'in' | 'up' — remembered between renders
+let pvPane = 'votes'; // preview: #account shows 'votes' or 'profile' (no separate route exists for votes)
+let pvNext = null;    // pane requested from another route (#looks → Profile)
 
 const TABS = [
   { id: 'orders', label: 'Orders', ic: 'bag' },
   { id: 'wishlist', label: 'Wishlist', ic: 'heart' },
   { id: 'looks', label: 'Saved looks', ic: 'camera' },
   { id: 'account', label: 'Profile', ic: 'user' },
+];
+// Preview mode: nothing is for sale, so Orders and Wishlist give way to "My votes".
+const PV_TABS = [
+  { id: 'votes', label: 'My votes', ic: 'heart' },
+  { id: 'looks', label: 'Saved looks', ic: 'camera' },
+  { id: 'profile', label: 'Profile', ic: 'user' },
 ];
 const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Hyderabad', 'Sialkot'];
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
@@ -91,6 +99,43 @@ const CSS = `<style>
 .v-account .prof{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.7fr);gap:22px;align-items:start}
 .v-account .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
 .v-account .signed-out-note{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.v-account .acct-tabs button{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 14px;color:var(--mist);font:600 15px var(--f-body);
+  border:0;background:none;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.v-account .acct-tabs button:hover{color:var(--text)}
+.v-account .acct-tabs [aria-current="page"]{color:var(--violet-lo);border-color:var(--violet)}
+.v-account .acct-tabs [aria-current="page"] .ico{color:var(--violet)}
+.v-account .mv{display:grid;gap:18px}
+.v-account .mv-sum{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v-account .mv-sum div{padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.75)}
+.v-account .mv-sum b{display:block;font:700 26px/1.1 var(--f-display);color:var(--violet)}
+.v-account .mv-sum span{font-size:14px;color:var(--mist)}
+.v-account .mv h2{font-size:22px;margin:0 0 4px}
+.v-account .mv-head{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.v-account .mv-head p{margin:0}
+.v-account .mv-list{display:grid;gap:10px}
+.v-account .mv-row{display:grid;grid-template-columns:60px minmax(0,1fr) auto;gap:14px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.7)}
+.v-account .mv-row .th{width:60px;height:60px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 50% 38%,#FFFFFF,#E2EBE2)}
+.v-account .mv-row .th svg{width:82%;height:82%}
+.v-account .mv-row a.nm{font:600 16px var(--f-display);color:var(--text)}
+.v-account .mv-row .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.v-account .mv-row .price{font-size:16px}
+.v-account .mv-chips{display:flex;gap:8px;flex-wrap:wrap}
+.v-account .mv-chips a{display:inline-flex;align-items:center;gap:6px}
+.v-account .mv-cat{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.v-account .mv-cat .ic{width:52px;height:52px;border-radius:16px;display:grid;place-items:center;background:var(--gloss-violet);color:#fff;flex:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 20px rgba(47,93,70,.22)}
+.v-account .mv-cat .ic .ico{width:24px;height:24px}
+.v-account .mv-anon{display:flex;gap:10px;align-items:flex-start;margin:0}
+.v-account .mv-anon .ico{color:var(--violet-hi);margin-top:1px}
+@media(max-width:620px){
+  .v-account .mv-sum{grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .v-account .mv-sum div{padding:10px 12px}
+  .v-account .mv-sum b{font-size:22px}
+  .v-account .mv-sum span{font-size:12.5px}
+  .v-account .mv-row{grid-template-columns:52px minmax(0,1fr);gap:10px 12px}
+  .v-account .mv-row .th{width:52px;height:52px}
+  .v-account .mv-row .acts{grid-column:1/-1;justify-content:flex-start}
+  .v-account .mv-row .acts .btn{flex:1}
+}
 .v-account .empty h3{font-size:22px}
 .v-account .empty p{max-width:46ch;margin-left:auto;margin-right:auto}
 .v-account .empty .row{justify-content:center}
@@ -119,6 +164,76 @@ const CSS = `<style>
 </style>`;
 
 // ---------------- pieces ----------------
+function pvTabsNav(cur) {
+  const n = { votes: S.myVotes().want.length, looks: S.looks().length };
+  return `<nav class="acct-tabs" aria-label="Your sections">${PV_TABS.map(t => {
+    const c = n[t.id] ? ` <span class="n">${n[t.id]}</span>` : '';
+    const curA = cur === t.id ? 'aria-current="page"' : '';
+    if (t.id === 'looks') return `<a href="#looks" ${curA}>${icon(t.ic)} ${t.label}${c}</a>`;
+    return `<button type="button" data-acc="pane" data-pane="${t.id}" ${curA}>${icon(t.ic)} ${t.label}${c}</button>`;
+  }).join('')}</nav>`;
+}
+function pvHero(u) {
+  return `<div class="glass pad acct-hero"><span class="orb"></span>
+    <div class="avatar" aria-hidden="true">${u ? initial(u) : icon('heart')}</div>
+    <div class="who">
+      <span class="eyebrow" style="margin-bottom:4px">Your RealityStore</span>
+      <h1>${u ? esc(u.name || 'Your votes') : 'Your votes'}</h1>
+      <p class="muted">We’re testing before we stock. Here’s everything you’ve tried, wanted and priced — no account needed.</p>
+    </div>
+    <a class="btn btn-try" href="#vote">${icon('chart')} Go to the vote</a>
+  </div>`;
+}
+function votesTab() {
+  const lineup = S.products();
+  const mine = S.myVotes();
+  const wanted = lineup.filter(p => mine.want.includes(p.id));
+  const notYet = lineup.filter(p => !mine.want.includes(p.id));
+  const cat = S.myCategory();
+  const prices = Object.entries(mine.price || {}).map(([id, v]) => ({ p: S.product(id), v })).filter(x => x.p);
+  const catN = cat ? (S.categoryVotes()[cat] || 0) : 0;
+  const row = (p, right, acts) => `<div class="mv-row">
+    <a class="th" href="#p-${esc(p.id)}" aria-hidden="true" tabindex="-1">${productArt(p)}</a>
+    <div><a class="nm" href="#p-${esc(p.id)}">${esc(p.name)}</a><div class="small dim">${right}</div></div>
+    <div class="acts">${acts}</div></div>`;
+  return `<div class="mv">
+    <div class="mv-sum" aria-label="Your votes at a glance">
+      <div><b>${wanted.length}<span style="font-size:15px;color:var(--dim)"> / ${lineup.length}</span></b><span>products you want</span></div>
+      <div><b>${prices.length}</b><span>price answers</span></div>
+      <div><b>${cat ? 1 : 0}</b><span>category pick</span></div>
+    </div>
+
+    <section class="glass pad">
+      <div class="mv-head"><div><h2>Products you want</h2><p class="small muted">Tap “I want this” on any product to add it here.</p></div></div>
+      ${wanted.length ? `<div class="mv-list">${wanted.map(p => {
+        const n = S.wantCount(p.id);
+        return row(p, `${esc(catLabel(p.category))} · ${n ? `${n.toLocaleString('en-US')} ${n === 1 ? 'person wants' : 'people want'} it` : 'your vote is in'}`,
+          `<a class="btn btn-sm btn-try" href="#tryon-${esc(p.id)}">${icon('camera')} Try on</a><button class="btn btn-sm" data-acc="unwant" data-id="${esc(p.id)}">${icon('x')} Remove vote</button>`);
+      }).join('')}</div>` : `<div class="empty" style="padding:26px 10px">${icon('heart')}<h3>No votes yet</h3><p class="muted">Try the products on with your camera and tell us which ones you’d want in the store.</p><div class="row"><a class="btn btn-try" href="#tryon">${icon('camera')} Start trying on</a><a class="btn" href="#vote">See all ${lineup.length}</a></div></div>`}
+      ${wanted.length && notYet.length ? `<p class="small muted" style="margin:16px 0 8px">Not voted on yet:</p><div class="mv-chips">${notYet.map(p => `<a class="chip" href="#p-${esc(p.id)}">${esc(p.name)}</a>`).join('')}</div>` : ''}
+    </section>
+
+    <section class="glass pad">
+      <div class="mv-head"><div><h2>Which category should launch first?</h2><p class="small muted">You can pick one, and change it any time.</p></div></div>
+      ${cat ? `<div class="mv-cat"><span class="ic">${icon('star')}</span><div style="flex:1 1 200px"><b style="font:600 18px var(--f-display)">${esc(catLabel(cat))}</b>
+          <div class="small dim">${catN ? `${catN.toLocaleString('en-US')} ${catN === 1 ? 'vote' : 'votes'} for this category so far` : 'Your pick is in'}</div></div>
+          <a class="btn btn-sm" href="#vote">${icon('edit')} Change my pick</a>${S.lineupFor(cat) ? `<a class="btn btn-sm" href="#p-${esc(S.lineupFor(cat))}">See the product</a>` : ''}</div>`
+        : `<p class="muted" style="margin:0 0 12px">You haven’t picked a category yet.</p><a class="btn btn-try btn-sm" href="#vote">${icon('chart')} Pick a category</a>`}
+    </section>
+
+    <section class="glass pad">
+      <div class="mv-head"><div><h2>What you’d pay</h2><p class="small muted">Your answers to “What would you pay?”, next to our expected price.</p></div></div>
+      ${prices.length ? `<div class="mv-list">${prices.map(({ p, v }) => {
+        const ps = S.priceStats(p.id);
+        return row(p, `Expected ${money(p.price)}${ps && ps.n > 0 ? ` · average answer ${money(ps.avg)} (${ps.n})` : ''}`,
+          `<span class="price" title="Your answer">${money(v)}</span><a class="btn btn-sm" href="#p-${esc(p.id)}">${icon('edit')} Change</a>`);
+      }).join('')}</div>` : `<p class="muted" style="margin:0 0 12px">No price answers yet. Each product page asks what you’d honestly pay.</p><a class="btn btn-sm" href="#p-${esc(lineup[0]?.id || '')}">${icon('arrow')} Answer for the first product</a>`}
+    </section>
+
+    <p class="note mv-anon">${icon('lock')}<span><b>Voting is anonymous.</b> Your votes are tied to a random id kept in this browser — no account, name or email needed. Clearing this site’s data starts you fresh.</span></p>
+  </div>`;
+}
+
 function tabsNav(cur, u) {
   const counts = { orders: S.myOrders().length, wishlist: liveWish().length, looks: S.looks().length };
   return `<nav class="acct-tabs" aria-label="Account sections">${TABS.map(t => {
@@ -166,7 +281,7 @@ function authCard() {
         <button type="button" role="tab" aria-selected="${up}" data-acc="mode" data-mode="up">Create account</button>
       </div>
       <h2 style="font-size:26px">${up ? 'Create your account' : 'Welcome back'}</h2>
-      <p class="muted" style="margin-bottom:20px">${up ? 'Takes ten seconds. Your bag and wishlist stay as they are.' : 'Sign in to see your orders, wishlist and saved looks.'}</p>
+      <p class="muted" style="margin-bottom:20px">${S.isPreview() ? 'Optional — you can vote without an account. A profile just keeps your name and email in this browser.' : up ? 'Takes ten seconds. Your bag and wishlist stay as they are.' : 'Sign in to see your orders, wishlist and saved looks.'}</p>
       <form id="auth-form" novalidate>
         ${up ? `<div class="field"><label for="au-name">Full name</label>
           <input class="input" id="au-name" name="name" autocomplete="name" placeholder="e.g. Ayesha Khan"><span class="err" data-err="name"></span></div>` : ''}
@@ -182,10 +297,12 @@ function authCard() {
     </div>
     <div class="glass pad perks">
       <h3 style="font-size:20px;margin-bottom:4px">What your account keeps</h3>
-      <div class="perk"><span class="ic">${icon('truck')}</span><div><h3>Order tracking</h3><p>Every order with its status, from confirmed to delivered.</p></div></div>
+      ${S.isPreview() ? `<div class="perk"><span class="ic">${icon('heart')}</span><div><h3>Your votes</h3><p>Kept in this browser with or without an account — under My votes.</p></div></div>
+      <div class="perk"><span class="ic">${icon('camera')}</span><div><h3>Saved looks</h3><p>Snapshots you took in the Try-On Studio, so you can compare styles side by side.</p></div></div>
+      <div class="perk"><span class="ic">${icon('mail')}</span><div><h3>Launch news</h3><p>Want to hear when the store opens? Leave your email on the vote page.</p></div></div>` : `<div class="perk"><span class="ic">${icon('truck')}</span><div><h3>Order tracking</h3><p>Every order with its status, from confirmed to delivered.</p></div></div>
       <div class="perk"><span class="ic">${icon('heart')}</span><div><h3>Wishlist</h3><p>Pieces you saved while browsing, ready when you are.</p></div></div>
       <div class="perk"><span class="ic">${icon('camera')}</span><div><h3>Saved looks</h3><p>Snapshots you took in the Try-On Studio, so you can compare styles side by side.</p></div></div>
-      <div class="perk"><span class="ic">${icon('pin')}</span><div><h3>Faster checkout</h3><p>Your phone and delivery address filled in for you.</p></div></div>
+      <div class="perk"><span class="ic">${icon('pin')}</span><div><h3>Faster checkout</h3><p>Your phone and delivery address filled in for you.</p></div></div>`}
       <a class="btn" href="#privacy" style="justify-self:start;margin-top:4px">${icon('shield')} Camera &amp; privacy</a>
     </div>
   </div>`;
@@ -255,7 +372,7 @@ function profileTab(u) {
   return `<div class="prof">
     <form class="glass pad" id="prof-form" novalidate>
       <h2 style="font-size:24px">Profile</h2>
-      <p class="muted" style="margin-bottom:20px">Used to pre-fill checkout. Saved only in this browser.</p>
+      <p class="muted" style="margin-bottom:20px">${S.isPreview() ? 'Saved only in this browser. Not needed to vote.' : 'Used to pre-fill checkout. Saved only in this browser.'}</p>
       <div class="two">
         <div class="field"><label for="pf-name">Full name</label><input class="input" id="pf-name" name="name" autocomplete="name" value="${esc(u.name || '')}"><span class="err" data-err="name"></span></div>
         <div class="field"><label for="pf-email">Email</label><input class="input" id="pf-email" name="email" type="email" autocomplete="email" value="${esc(u.email || '')}"><span class="err" data-err="email"></span></div>
@@ -269,7 +386,7 @@ function profileTab(u) {
     <div class="glass pad">
       <h3>Account</h3>
       <div class="kv"><span class="muted">Member since</span><span>${esc(fmtDate(u.joined) || '—')}</span></div>
-      <div class="kv"><span class="muted">Orders</span><span>${S.myOrders().length}</span></div>
+      ${S.isPreview() ? `<div class="kv"><span class="muted">Products you want</span><span>${S.myVotes().want.length}</span></div>` : `<div class="kv"><span class="muted">Orders</span><span>${S.myOrders().length}</span></div>`}
       <div class="kv"><span class="muted">Saved looks</span><span>${S.looks().length}</span></div>
       <hr class="hr">
       <p class="small muted">This is a demo account. It lives in this browser's storage — clearing your browser data removes it. There is no server copy.</p>
@@ -280,6 +397,11 @@ function profileTab(u) {
 
 function body(param) {
   const u = S.user();
+  if (S.isPreview()) {
+    const cur = param === 'looks' ? 'looks' : param === 'account' && pvPane === 'profile' ? 'profile' : 'votes';
+    const content = cur === 'looks' ? looksTab() : cur === 'profile' ? (u ? profileTab(u) : authCard()) : votesTab();
+    return `<section class="wrap acct-band">${pvHero(u)}${pvTabsNav(cur)}<div id="acct-body">${content}</div></section>`;
+  }
   const cur = TABS.some(t => t.id === param) ? param : 'account';
   let content;
   if (!u && (cur === 'account' || cur === 'orders')) {
@@ -299,8 +421,10 @@ function setErr(form, name, msg) {
 }
 
 export default {
-  title: p => ({ orders: 'Your orders', wishlist: 'Wishlist', looks: 'Saved looks' }[p] || (S.user() ? 'Your account' : 'Sign in')),
-  render(param) { return `<div class="v-account">${CSS}<div id="acct-root">${body(param)}</div></div>`; },
+  title: p => S.isPreview() ? (p === 'looks' ? 'Saved looks' : 'My votes') : ({ orders: 'Your orders', wishlist: 'Wishlist', looks: 'Saved looks' }[p] || (S.user() ? 'Your account' : 'Sign in')),
+  render(param) {
+    pvPane = pvNext || 'votes'; pvNext = null;
+    return `<div class="v-account">${CSS}<div id="acct-root">${body(param)}</div></div>`; },
   mount(root, param) {
     const host = () => root.querySelector('#acct-root');
     const rerender = () => { const h = host(); if (h) h.innerHTML = body(param); };
@@ -314,6 +438,11 @@ export default {
         const show = inp.type === 'password'; inp.type = show ? 'text' : 'password';
         t.setAttribute('aria-pressed', show); t.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
       } else if (a === 'signout') { S.signOut(); toast('Signed out — see you soon', 'user'); }
+      else if (a === 'pane') {
+        pvPane = t.dataset.pane;
+        if (param !== 'account') { pvNext = pvPane; location.hash = '#account'; return; }
+        rerender();
+      } else if (a === 'unwant') { if (S.wantsIt(t.dataset.id)) S.toggleWant(t.dataset.id); toast('Vote removed', 'x'); }
       else if (a === 'rmlook') { S.removeLook(Number(t.dataset.i)); toast('Snapshot removed', 'trash'); }
     };
     const onSubmit = e => {
@@ -345,7 +474,7 @@ export default {
     };
     root.addEventListener('click', onClick);
     root.addEventListener('submit', onSubmit);
-    const off = S.on(k => { if (['user', 'orders', 'wish', 'looks', 'edits', 'custom'].includes(k)) rerender(); });
+    const off = S.on(k => { if (['user', 'orders', 'wish', 'looks', 'edits', 'custom', 'votes'].includes(k)) rerender(); });
     return () => { off(); root.removeEventListener('click', onClick); root.removeEventListener('submit', onSubmit); };
   },
 };

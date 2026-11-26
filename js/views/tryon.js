@@ -23,8 +23,22 @@ const LOST_HINT = {
 };
 
 function pick(param) {
-  const p = (param && S.product(param)) || S.product('nova-bucket-hat') || S.products()[0];
+  let p = (param && S.product(param)) || (S.isPreview() ? S.products()[0] : S.product('nova-bucket-hat')) || S.products()[0];
+  // Preview: an old link to a product outside the test opens that category's test product (admins can still preview any).
+  if (p && S.isPreview() && !S.isAdminSignedIn() && !S.products().some(x => x.id === p.id)) p = S.product(S.lineupFor(p.category)) || S.products()[0];
   return p;
+}
+
+// "Would you buy this?" is asked once per product, after ~6 s of good tracking.
+const ASK_KEY = 'mirra:asked';
+const ASK_AFTER_MS = 6000;
+function askedSet() { try { return new Set(JSON.parse(localStorage.getItem(ASK_KEY) || '[]')); } catch (e) { return askedMem; } }
+const askedMem = new Set();
+function markAsked(id) { askedMem.add(id); try { const a = askedSet(); a.add(id); localStorage.setItem(ASK_KEY, JSON.stringify([...a])); } catch (e) { /* memory only */ } }
+const wasAsked = id => askedMem.has(id) || askedSet().has(id);
+function triedSet() {
+  const st = S.stats() || {};
+  return new Set(Object.keys(st).filter(id => (Number(st[id]?.tryon) || 0) > 0));
 }
 
 export default {
@@ -94,6 +108,39 @@ export default {
 .v-tryon input[type=range]{width:100%;accent-color:var(--violet);height:30px}
 .v-tryon .fitrow{display:grid;grid-template-columns:70px 1fr;gap:10px;align-items:center;font-size:14px;color:var(--mist)}
 .v-tryon .buyrow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v-tryon .exp{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.v-tryon .exp .small{color:var(--dim)}
+.v-tryon .pv-want{width:100%;margin-top:16px;border:1px solid var(--line-2);background:#fff;color:var(--violet-lo)}
+.v-tryon .pv-want.on{background:var(--gloss-violet);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 22px rgba(47,93,70,0.25)}
+.v-tryon .pv-n{display:block;text-align:center;font-size:13px;color:var(--mist);margin-top:6px}
+.v-tryon .pv-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.v-tryon .pv-chips .chip{justify-content:center;padding:0 6px;min-height:40px;font-size:13px;background:#fff}
+.v-tryon .pv-chips .chip.on{background:var(--gloss-violet)}
+.v-tryon .pv-avg{font-size:13px;color:var(--dim);margin:8px 0 0}
+.v-tryon .mini{position:relative}
+.v-tryon .pinfo .th,.v-tryon .mini .a{overflow:hidden}
+.v-tryon .pinfo .th img,.v-tryon .mini .a img{width:100%;height:100%;object-fit:cover}
+.v-tryon .rail.all{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;scroll-snap-type:none;padding:2px 0 0}
+.v-tryon .rail.all .mini{width:auto;align-content:start}
+.v-tryon .votelink{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--violet-hi);font-weight:600}
+.v-tryon .votelink .ico{width:16px;height:16px}
+@media(max-width:420px){.v-tryon .rail.all{gap:8px}.v-tryon .rail.all .mini{padding:6px}.v-tryon .mini b{font-size:12px}}
+.v-tryon .mini .done{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:var(--gloss-violet);color:#fff;box-shadow:0 0 0 2px #fff}
+.v-tryon .mini .done .ico{width:13px;height:13px;stroke-width:2.6}
+.v-tryon .mini .cat{font-size:11.5px;color:var(--dim);line-height:1.2}
+.v-tryon .mini .st{font:600 11.5px var(--f-body);color:var(--violet-hi)}
+.v-tryon .ask{position:absolute;z-index:4;top:58px;right:16px;width:min(280px,calc(100% - 32px));padding:14px 16px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.74));backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
+  border:1px solid rgba(255,255,255,.7);box-shadow:0 18px 40px rgba(30,43,36,.25),inset 0 1px 0 #fff;color:var(--text);animation:askin .35s ease-out}
+.v-tryon .ask[hidden]{display:none}
+.v-tryon .ask b{display:block;font:700 16px var(--f-display);margin-bottom:2px}
+.v-tryon .ask p{margin:0 0 10px;font-size:13px;color:var(--mist)}
+.v-tryon .ask .row{gap:8px;flex-wrap:nowrap}
+.v-tryon .ask .btn{flex:1;min-height:40px;padding:0 10px;font-size:13.5px}
+.v-tryon .ask .x{position:absolute;top:6px;right:6px;width:32px;height:32px;border:0;background:none;color:var(--dim);display:grid;place-items:center}
+.v-tryon .ask .x .ico{width:16px;height:16px}
+@keyframes askin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@media(max-width:600px){.v-tryon .ask{top:54px;left:12px;right:12px;width:auto;padding:12px 14px}}
 @media(max-width:600px){.v-tryon .ar-stage{aspect-ratio:3/4;border-radius:18px}.v-tryon .bl,.v-tryon .br{bottom:84px}}
 </style>
 <section class="wrap">
@@ -115,6 +162,12 @@ export default {
             <button class="icon-btn" id="stopcam" aria-label="Turn camera off">${icon('x')}</button>
           </div>
         </div>
+        <div class="ask" id="ask" role="dialog" aria-live="polite" aria-labelledby="ask-q" hidden>
+          <button class="x" id="ask-x" aria-label="Close">${icon('x')}</button>
+          <b id="ask-q">Would you buy this?</b>
+          <p id="ask-p">Your vote decides what we stock.</p>
+          <div class="row"><button class="btn btn-try" id="ask-yes">${icon('heart')} Yes, I want it</button><button class="btn" id="ask-no">Not for me</button></div>
+        </div>
         <div class="ov" id="ov-intro">
           <div class="in">
             <div class="ghost-wrap"><div class="ghost-art" id="ghost">${productArt(p, state.color.hex)}</div></div>
@@ -133,9 +186,10 @@ export default {
     <aside class="panel">
       <div class="glass pad" id="pcard"></div>
       <div class="glass pad">
-        <span class="label">Switch product</span>
+        ${S.isPreview() ? `<div class="row between" style="margin-bottom:8px"><span class="label" style="margin:0">The ${S.products().length} in the test</span><a class="small votelink" href="#vote">Vote page ${icon('arrow')}</a></div>
+        <div class="rail all" id="rail"></div>` : `<span class="label">Switch product</span>
         <div class="ztabs" id="ztabs">${ZONES.map(z => `<button class="chip ${z.id === p.zone ? 'on' : ''}" data-zone="${z.id}">${icon(ZONE_ICON[z.id])}${esc(z.label)}</button>`).join('')}</div>
-        <div class="rail" id="rail" style="margin-top:12px"></div>
+        <div class="rail" id="rail" style="margin-top:12px"></div>`}
       </div>
       <div class="glass pad">
         <div class="row between" style="margin-bottom:8px"><span class="label" style="margin:0">Adjust the fit</span><button class="btn btn-ghost btn-sm" id="fit-reset">Reset</button></div>
@@ -176,31 +230,70 @@ export default {
         ${sug && sug !== state.size && p.sizes.length > 1 ? `<button class="btn btn-sm" id="use-size" data-s="${esc(sug)}">Use ${esc(sug)}</button>` : ''}
         <span class="small dim">Estimated from the camera (your iris is the ruler). For an exact size, measure with a tape above your ears.</span></div>`;
     }
+    const pv = S.isPreview();
+    function votePanel(p) {
+      const on = S.wantsIt(p.id), n = S.wantCount(p.id), mine = S.myPrice(p.id), ps = S.priceStats(p.id);
+      return `<button class="btn btn-lg pv-want ${on ? 'on' : ''}" id="pv-want" aria-pressed="${on}">${on ? `${icon('check')} You want this` : `${icon('heart')} I want this`}</button>
+        <span class="pv-n">${n ? `${n.toLocaleString('en-US')} ${n === 1 ? 'person wants' : 'people want'} this` : 'No votes yet — be the first'}</span>
+        <hr class="hr">
+        <span class="label" id="pv-pay-l">What would you pay?</span>
+        <div class="pv-chips" role="group" aria-labelledby="pv-pay-l">${S.priceChoices(p).map(v => `<button class="chip ${mine === v ? 'on' : ''}" data-pv-price="${v}" aria-pressed="${mine === v}">${money(v)}</button>`).join('')}</div>
+        <p class="pv-avg">${ps && ps.n > 0 ? `Average answer: <b style="color:var(--text)">${money(ps.avg)}</b> from ${ps.n.toLocaleString('en-US')} ${ps.n === 1 ? 'person' : 'people'}` : 'We’re testing before we stock — your answers set the launch price.'}</p>`;
+    }
     function renderCard() {
       const { p, color, size } = state;
       $('#pcard').innerHTML = `
         <div class="pinfo"><div class="th">${productArt(p, color.hex)}</div>
-          <div><span class="small dim">${esc(catLabel(p.category))} · ${esc(arLevel(p.zone).label)}</span><h2>${esc(p.name)}</h2>${priceTag(p)}</div></div>
+          <div><span class="small dim">${esc(catLabel(p.category))} · ${esc(arLevel(p.zone).label)}</span><h2>${esc(p.name)}</h2>${pv ? `<span class="exp"><span class="small">Expected price</span>${`<span class="price">${money(p.price)}</span>`}</span>` : priceTag(p)}</div></div>
         <hr class="hr">
         ${p.colors?.length ? `<span class="label">Colour · <span style="color:var(--text)">${esc(color.name)}</span></span>
         <div class="opts" id="colors">${p.colors.map((c, i) => `<button class="sw sw-lg ${c.name === color.name ? 'on' : ''}" style="background:${esc(c.hex)}" data-i="${i}" aria-label="${esc(c.name)}" aria-pressed="${c.name === color.name}"></button>`).join('')}</div>` : ''}
         ${p.sizes?.length > 1 ? `<span class="label" style="margin-top:14px">Size</span><div class="opts" id="sizes">${p.sizes.map(s => `<button class="chip ${s === size ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
         ${sizeHint()}
-        <div class="buyrow" style="margin-top:16px">
+        ${pv ? votePanel(p) : `<div class="buyrow" style="margin-top:16px">
           <button class="btn btn-buy" data-act="buy" data-id="${esc(p.id)}" data-color="${esc(color.name)}" data-size="${esc(size)}">Buy now</button>
           <button class="btn" data-act="add" data-id="${esc(p.id)}" data-color="${esc(color.name)}" data-size="${esc(size)}">${icon('bag')} Add to bag</button>
-        </div>`;
+        </div>`}`;
       $('#pcard').querySelectorAll('#colors button').forEach(b => b.addEventListener('click', () => {
         state.color = p.colors[+b.dataset.i]; renderCard(); updateGhost();
         if (engine) engine.setColor(state.color.hex);
       }));
       $('#pcard').querySelectorAll('#sizes button').forEach(b => b.addEventListener('click', () => { state.size = b.dataset.s; renderCard(); }));
+      $('#pcard').querySelector('#pv-want')?.addEventListener('click', () => {
+        const on = S.toggleWant(p.id); toast(on ? 'Thanks! Your vote is in' : 'Vote removed', on ? 'heart' : 'x'); if (on) hideAsk();
+      });
+      $('#pcard').querySelectorAll('[data-pv-price]').forEach(b => b.addEventListener('click', () => {
+        const v = Number(b.dataset.pvPrice); S.votePrice(p.id, v); toast(`Thanks — you’d pay ${money(v)}`, 'check');
+      }));
       $('#pcard').querySelector('#use-size')?.addEventListener('click', e => { state.size = e.currentTarget.dataset.s; renderCard(); toast('Size ' + state.size + ' selected', 'check'); });
       $('#to-product').href = '#p-' + p.id; $('#err-product').href = '#p-' + p.id;
       $('#fit-note').textContent = p.zone === 'feet' ? 'Feet try-on is a beta preview — it follows your ankles, heels and toes.' : p.zone === 'body' ? 'Jackets are a live preview of colour and style, not an exact drape.' : 'Nudge the size or height if it sits a little off.';
     }
+    let askTimer = 0;
+    function hideAsk() { clearTimeout(askTimer); const a = $('#ask'); if (a) a.hidden = true; }
+    function maybeAsk() {
+      const p = state.p;
+      if (wasAsked(p.id) || S.wantsIt(p.id) || !$('#ask').hidden) return;
+      markAsked(p.id);
+      $('#ask-q').textContent = 'Would you buy this?';
+      $('#ask-p').textContent = `${p.name} — your vote decides what we stock.`;
+      $('#ask').dataset.id = p.id; $('#ask').hidden = false;
+      clearTimeout(askTimer); askTimer = setTimeout(hideAsk, 15000);
+    }
     function updateGhost() { $('#ghost').innerHTML = productArt(state.p, state.color.hex); }
     function renderRail() {
+      if (pv) {
+        const tried = triedSet(); state.tracked.forEach(id => tried.add(id));
+        $('#rail').innerHTML = S.products().map(x => {
+          const t = tried.has(x.id), w = S.wantsIt(x.id);
+          const st = w ? 'You want this' : t ? 'Tried on' : 'Not tried yet';
+          return `<button class="mini ${x.id === state.p.id ? 'on' : ''}" data-id="${esc(x.id)}" aria-pressed="${x.id === state.p.id}" aria-label="${esc(x.name)} — ${st}">
+          ${t || w ? `<span class="done" aria-hidden="true">${icon(w ? 'heart' : 'check')}</span>` : ''}
+          <span class="a">${productArt(x)}</span><span class="cat">${esc(catLabel(x.category))}</span><b>${esc(x.name)}</b><span class="st" ${t || w ? '' : 'style="color:var(--dim);font-weight:500"'}>${st}</span></button>`;
+        }).join('');
+        $('#rail').querySelectorAll('.mini').forEach(b => b.addEventListener('click', () => switchProduct(b.dataset.id)));
+        return;
+      }
       const list = S.products().filter(x => x.zone === state.zone);
       $('#rail').innerHTML = list.map(x => `<button class="mini ${x.id === state.p.id ? 'on' : ''}" data-id="${esc(x.id)}" aria-pressed="${x.id === state.p.id}">
         <span class="a">${productArt(x)}</span><b>${esc(x.name)}</b><span class="price">${money(x.price)}</span></button>`).join('') || '<p class="muted small">No products here yet.</p>';
@@ -209,7 +302,7 @@ export default {
     async function switchProduct(id) {
       const p = S.product(id); if (!p) return;
       state.p = p; state.color = p.colors?.[0] || state.color; state.size = p.sizes?.[0] || '';
-      state.zone = p.zone;
+      state.zone = p.zone; state.okMs = 0; state.lastOk = 0; hideAsk();
       root.querySelectorAll('#ztabs .chip').forEach(c => c.classList.toggle('on', c.dataset.zone === p.zone));
       renderCard(); renderRail(); updateGhost();
       $('#intro-tip').innerHTML = `${esc(arLevel(p.zone).tip)} We need your camera to place the <b>${esc(p.name)}</b> on you.`;
@@ -233,10 +326,17 @@ export default {
             if (Math.abs((state.headCm || 0) - headCm) >= 0.5) { state.headCm = headCm; renderCard(); }
           },
           onTrack: (ok, lostMs) => {
+            const now = performance.now();
             if (ok) {
               setHint(`${state.p.name} · ${state.color.name}`);
-              if (!state.tracked.has(state.p.id)) { state.tracked.add(state.p.id); S.track('tryon', state.p.id); }
-            } else if (lostMs > 700) setHint(LOST_HINT[state.p.zone]);
+              if (!state.tracked.has(state.p.id)) { state.tracked.add(state.p.id); S.track('tryon', state.p.id); if (pv) renderRail(); }
+              if (pv && state.lastOk) state.okMs = (state.okMs || 0) + Math.min(250, now - state.lastOk);
+              state.lastOk = now;
+              if (pv && state.okMs >= ASK_AFTER_MS) maybeAsk();
+            } else {
+              state.lastOk = 0;
+              if (lostMs > 700) setHint(LOST_HINT[state.p.zone]);
+            }
           },
         });
         engine.setFit({ scale: +$('#fit-size').value, lift: +$('#fit-lift').value });
@@ -275,12 +375,13 @@ export default {
       const m = openModal(`<div class="pad" style="display:grid;gap:14px">
         <div class="row between"><h3 style="margin:0">Your look</h3><button class="icon-btn" data-close aria-label="Close">${icon('x')}</button></div>
         <img src="${url}" alt="Snapshot wearing ${esc(state.p.name)}" style="width:100%;border-radius:16px;border:1px solid var(--line)">
-        <div class="row" style="justify-content:space-between"><span><b>${esc(state.p.name)}</b> <span class="dim">· ${esc(state.color.name)}</span></span>${priceTag(state.p)}</div>
+        <div class="row" style="justify-content:space-between"><span><b>${esc(state.p.name)}</b> <span class="dim">· ${esc(state.color.name)}</span></span>${pv ? `<span class="exp"><span class="small dim">Expected</span> <span class="price">${money(state.p.price)}</span></span>` : priceTag(state.p)}</div>
         <div class="row">
           <button class="btn btn-try" id="m-save">${icon('heart')} Save to my looks</button>
           <a class="btn" href="${url}" download="${fname}">${icon('download')} Download</a>
           ${navigator.share ? `<button class="btn" id="m-share">${icon('share')} Share</button>` : ''}
-          <button class="btn btn-buy" data-act="buy" data-id="${esc(state.p.id)}" data-color="${esc(state.color.name)}" data-size="${esc(state.size)}">Buy now</button>
+          ${pv ? `<button class="btn ${S.wantsIt(state.p.id) ? 'btn-buy' : ''}" id="m-want" aria-pressed="${S.wantsIt(state.p.id)}">${S.wantsIt(state.p.id) ? `${icon('check')} You want this` : `${icon('heart')} I want this`}</button>`
+            : `<button class="btn btn-buy" data-act="buy" data-id="${esc(state.p.id)}" data-color="${esc(state.color.name)}" data-size="${esc(state.size)}">Buy now</button>`}
         </div>
         <p class="small dim" style="margin:0">Snapshots stay in your browser unless you share or download them.</p></div>`);
       m.el.querySelector('#m-save').addEventListener('click', e => { S.addLook(url, state.p.id, state.color.name); toast('Saved to My looks', 'heart'); e.currentTarget.disabled = true; });
@@ -288,7 +389,14 @@ export default {
         try { const blob = await (await fetch(url)).blob(); const file = new File([blob], fname, { type: 'image/jpeg' });
           await navigator.share({ files: [file], title: 'My RealityStore look', text: `Trying on the ${state.p.name}` }); } catch (e) { /* cancelled */ }
       });
-      m.el.querySelector('[data-act="buy"]').addEventListener('click', () => m.close());
+      m.el.querySelector('[data-act="buy"]')?.addEventListener('click', () => m.close());
+      const snapId = state.p.id;
+      m.el.querySelector('#m-want')?.addEventListener('click', e => {
+        const b = e.currentTarget, on = S.toggleWant(snapId);
+        b.classList.toggle('btn-buy', on); b.setAttribute('aria-pressed', on);
+        b.innerHTML = on ? `${icon('check')} You want this` : `${icon('heart')} I want this`;
+        toast(on ? 'Thanks! Your vote is in' : 'Vote removed', on ? 'heart' : 'x');
+      });
     });
     root.querySelectorAll('#ztabs .chip').forEach(c => c.addEventListener('click', () => {
       state.zone = c.dataset.zone;
@@ -300,10 +408,18 @@ export default {
     const fitChange = () => engine && engine.setFit({ scale: +$('#fit-size').value, lift: +$('#fit-lift').value });
     $('#fit-size').addEventListener('input', fitChange); $('#fit-lift').addEventListener('input', fitChange);
     $('#fit-reset').addEventListener('click', () => { $('#fit-size').value = 1; $('#fit-lift').value = 0; fitChange(); });
+    $('#ask-yes').addEventListener('click', () => {
+      const id = $('#ask').dataset.id; hideAsk();
+      if (id && !S.wantsIt(id)) S.toggleWant(id);
+      toast('Thanks! Your vote is in', 'heart');
+    });
+    $('#ask-no').addEventListener('click', hideAsk);
+    $('#ask-x').addEventListener('click', hideAsk);
+    const offVotes = S.on(k => { if (pv && k === 'votes') { renderCard(); renderRail(); } });
     const onVis = () => { if (document.hidden && engine) stopCam(); };
     document.addEventListener('visibilitychange', onVis);
 
     renderCard(); renderRail();
-    return () => { document.removeEventListener('visibilitychange', onVis); if (engine) { engine.stop(); engine = null; } };
+    return () => { offVotes(); clearTimeout(askTimer); document.removeEventListener('visibilitychange', onVis); if (engine) { engine.stop(); engine = null; } };
   },
 };

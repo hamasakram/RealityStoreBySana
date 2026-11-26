@@ -7,7 +7,7 @@ export const sql = neon(process.env.DATABASE_URL);
 
 export const CATEGORIES = { hats: 'head', sunglasses: 'face', jackets: 'body', gloves: 'hands', shoes: 'feet', socks: 'feet' };
 export const MODELS = { hats: ['bucket', 'cap', 'beanie', 'slouchy', 'pompom', 'beret', 'fedora'], sunglasses: ['round', 'aviator', 'wayfarer', 'cateye'],
-  jackets: ['bomber', 'denim', 'puffer'], gloves: ['knit', 'leather', 'sport'], shoes: ['runner', 'hightop', 'loafer'], socks: ['crew', 'stripe', 'ankle'] };
+  jackets: ['bomber', 'denim', 'puffer'], gloves: ['knit', 'leather', 'sport'], shoes: ['runner', 'hightop', 'loafer', 'slide'], socks: ['crew', 'stripe', 'ankle'] };
 export const ORDER_STATUSES = ['Confirmed', 'Confirmed · pay on delivery', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
 export const FREE_SHIPPING = 5000, SHIPPING_FEE = 250;
 export const BASE_IDS = new Set(PRODUCTS.map(p => p.id));
@@ -84,7 +84,7 @@ export function cleanProduct(input) {
     desc: str(input.desc, 2000), features: (Array.isArray(input.features) ? input.features : []).slice(0, 12).map(f => str(f, 120)).filter(Boolean),
     stock: Math.max(0, Math.min(100000, Math.round(Number(input.stock ?? 25)))),
     image: image || (typeof input.image === 'string' && /^img\/products\/[a-z0-9-]+\.(jpg|png|webp)$/.test(input.image) ? input.image : undefined),
-    arTex: input.arTex && typeof input.arTex === 'object' ? Object.fromEntries(Object.entries(input.arTex).filter(([k, v]) => ['knit', 'fur'].includes(k) && /^img\/products\/[a-z0-9-]+\.(jpg|png|webp)$/.test(v))) : undefined,
+    arTex: input.arTex && typeof input.arTex === 'object' ? Object.fromEntries(Object.entries(input.arTex).filter(([k, v]) => ['knit', 'fur', 'fabric'].includes(k) && /^img\/products\/[a-z0-9-]+\.(jpg|png|webp)$/.test(v))) : undefined,
     custom: !BASE_IDS.has(id),
   };
 }

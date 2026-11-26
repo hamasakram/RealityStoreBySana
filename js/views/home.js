@@ -1,10 +1,11 @@
 // RealityStore storefront homepage (#home)
 import * as S from '../store.js';
-import { esc, money, icon, productCard, priceTag, art, ZONE_ICON } from '../ui.js';
-import { ZONES, AR_LEVEL } from '../data.js';
+import { esc, money, icon, productCard, art, ZONE_ICON, wantBtn, pct, plural, launchForm, bindLaunchForm, toast } from '../ui.js';
+import { CATEGORIES, PREVIEW } from '../data.js';
 
-const HERO_ID = 'nova-bucket-hat';
-const GLASSES_ID = 'orbit-shades';
+// The phone mirror wears the line-up's hat + sunglasses (falls back to any product with that model).
+const HERO_ID = PREVIEW.lineup.hats || 'nova-bucket-hat';
+const GLASSES_ID = PREVIEW.lineup.sunglasses || 'orbit-shades';
 
 // Nest a product's procedural artwork inside the hero SVG at a given box.
 function placeArt(p, x, y, w, color) {
@@ -91,7 +92,9 @@ function hero() {
         <span class="hero-first"><span class="flag" aria-hidden="true"></span><span><b>Pakistan’s First</b> Augmented Reality Online Store</span></span>
         <p class="hero-brand">Reality<b>Store</b></p>
         <h1>Wear it online.<br><span class="grad">Before you buy it.</span></h1>
-        <p class="lead muted">Try on hats, sunglasses, jackets, gloves, shoes and socks live through your phone’s camera — swap colours in a tap, then buy straight from the mirror.</p>
+        <p class="preview-pill"><span class="pp-dot" aria-hidden="true"></span><b>Preview</b> · nothing is on sale yet</p>
+        <p class="lead"><b>We’re testing before we stock — try on our ${n} sample products and vote for what you want.</b>
+          <span class="muted">The most-wanted pieces are the ones we’ll bring to the store.</span></p>
       </div>
       <div class="hero-pic">
         <div class="phone">
@@ -100,25 +103,22 @@ function hero() {
             <span class="live-pill"><span class="live-dot"></span>LIVE</span>
             <span class="track-pill">${icon('check')} Face tracked</span>
             ${p ? `<div class="pbar">
-              <div class="pbar-info"><b>${esc(p.name)}</b>${priceTag(p)}</div>
-              <a class="btn btn-buy btn-sm" href="#checkout" data-act="buy" data-id="${esc(p.id)}">Buy now</a>
+              <div class="pbar-info"><b>${esc(p.name)}</b><span class="pbar-exp">Expected ${money(p.price)}</span></div>
+              ${wantBtn(p, 'btn-sm pbar-want')}
             </div>` : ''}
           </div>
         </div>
-        ${p ? `<div class="float-chip fc-colors glass" aria-hidden="true">
-          <span class="small dim">Colour</span>
-          <span class="swatches">${(p.colors || []).slice(0, 4).map((c, i) => `<span class="sw ${i === 0 ? 'sel' : ''}" style="background:${esc(c.hex)}"></span>`).join('')}</span>
-        </div>` : ''}
+        <div class="float-chip fc-colors glass" aria-hidden="true">${icon('heart')}<span>Vote for it</span></div>
         <div class="float-chip fc-swap glass" aria-hidden="true">${icon('refresh')}<span>Swap live</span></div>
       </div>
       <div class="hero-cta">
         <div class="row cta-row">
-          <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Start try-on</a>
-          <a class="btn btn-lg" href="#shop">Shop all ${icon('arrow')}</a>
+          <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Start trying on</a>
+          <a class="btn btn-lg" href="#vote">${icon('chart')} See the results</a>
         </div>
         <ul class="hero-facts">
-          <li>${icon('cube')}<span><b>${n}</b> pieces to try</span></li>
-          <li>${icon('grid')}<span><b>5</b> body zones</span></li>
+          <li>${icon('cube')}<span><b>${n}</b> sample products</span></li>
+          <li>${icon('grid')}<span><b>${CATEGORIES.length}</b> categories</span></li>
           <li>${icon('lock')}<span>No app, no upload</span></li>
         </ul>
       </div>
@@ -126,57 +126,29 @@ function hero() {
   </section>`;
 }
 
-function zones() {
-  const all = S.products();
-  return `<section class="band" aria-labelledby="h-zones"><div class="wrap">
+function lineup() {
+  const list = S.products();
+  return `<section class="band" id="lineup" aria-labelledby="h-lineup"><div class="wrap">
     <div class="sec-head">
-      <div><span class="eyebrow">Shop by body part</span><h2 id="h-zones">Pick a zone, then try it live</h2></div>
-      <p>Each zone uses its own tracker, so try-on is tuned to where you wear it.</p>
+      <div><span class="eyebrow">The line-up</span><h2 id="h-lineup">One piece from every category</h2></div>
+      <p>Try each one on with your camera, then tap <b>I want this</b> on the ones you’d actually buy.</p>
     </div>
-    <div class="zones">
-      ${ZONES.map(z => {
-        const c = all.filter(p => p.zone === z.id).length;
-        const lvl = AR_LEVEL[z.id] || AR_LEVEL.head;
-        const pick = all.find(p => p.zone === z.id && !p.image);
-        return `<a class="glass zone" href="#shop-${esc(z.id)}">
-          <span class="z-ico">${icon(ZONE_ICON[z.id])}</span>
-          <span class="z-text">
-            <span class="z-name">${esc(z.label)}${icon('arrow')}</span>
-            <span class="z-blurb">${esc(z.blurb)}</span>
-          </span>
-          <span class="z-meta"><span class="z-count">${c} ${c === 1 ? 'product' : 'products'}</span><span class="z-lvl">${icon('camera')}${esc(lvl.label)}</span></span>
-          ${pick ? `<span class="z-art" aria-hidden="true">${art(pick)}</span>` : ''}
-        </a>`;
-      }).join('')}
-    </div>
-  </div></section>`;
-}
-
-const rail = (tag, max) => {
-  const list = S.products().filter(p => (p.tags || []).includes(tag)).slice(0, max);
-  return list.length ? list.map(productCard).join('') : `<p class="muted">Nothing here yet — check back soon.</p>`;
-};
-
-function trending() {
-  return `<section class="band" aria-labelledby="h-trend"><div class="wrap">
-    <div class="sec-head">
-      <div><span class="eyebrow">Trending now</span><h2 id="h-trend">What people are trying on</h2></div>
-      <a class="btn" href="#shop-trending">View all ${icon('arrow')}</a>
-    </div>
-    <div class="products rail" data-rail="trending">${rail('trending', 8)}</div>
+    ${list.length ? `<div class="products lineup">${list.map(productCard).join('')}</div>`
+      : `<div class="glass pad empty">${icon('cube')}<h3>The line-up is being set up</h3><p class="muted">Check back soon — sample products are on their way.</p></div>`}
+    <div class="row lineup-more"><a class="btn" href="#shop">Try &amp; vote on all ${list.length} ${icon('arrow')}</a><span class="small muted">More products come after the vote.</span></div>
   </div></section>`;
 }
 
 function steps() {
   const s = [
-    ['camera', 'Tap Try on', 'Every product has a Try on button. Pick a piece — or open the studio and browse from the camera.'],
-    ['eye', 'Allow your camera', 'Your browser asks once. We track your face, hands or body to place the product where it belongs.'],
-    ['sparkle', 'Wear it live, buy from the camera', 'Move, turn, switch colours. Love it? Add it to your bag without leaving the mirror.'],
+    ['camera', 'Try it on', 'Tap Try on and allow your camera. The piece sits on your head, face, hands, body or feet — live.'],
+    ['heart', 'Vote', 'Tap I want this on what you’d buy, tell us what you’d pay, and pick the category we should open with.'],
+    ['sparkle', 'We stock the winners', 'The most-wanted products and the winning category are what we buy in first. You’ll hear when it opens.'],
   ];
   return `<section class="band" aria-labelledby="h-how"><div class="wrap">
     <div class="sec-head">
-      <div><span class="eyebrow">How try-on works</span><h2 id="h-how">Three steps to the mirror</h2></div>
-      <a class="btn btn-ghost" href="#how-it-works">More about try-on ${icon('arrow')}</a>
+      <div><span class="eyebrow">How the test works</span><h2 id="h-how">Three steps, two minutes</h2></div>
+      <a class="btn btn-ghost" href="#how-it-works">How try-on works ${icon('arrow')}</a>
     </div>
     <ol class="steps">
       ${s.map(([ic, t, d], i) => `<li class="glass pad step">
@@ -184,21 +156,70 @@ function steps() {
         <h3>${t}</h3><p class="muted">${d}</p>
       </li>`).join('')}
     </ol>
-    <p class="note privacy">${icon('shield')}<span>Your camera feed is processed on your device and never uploaded. <a href="#privacy">Read how we handle your camera</a></span></p>
+    <p class="note privacy">${icon('shield')}<span>Your camera feed is processed on your device and never uploaded. Votes are anonymous. <a href="#privacy">Camera &amp; privacy</a></span></p>
+  </div></section>`;
+}
+
+// Live category race + counters (re-rendered on 'votes')
+function raceHTML() {
+  const cv = S.categoryVotes(), mine = S.myCategory();
+  const total = CATEGORIES.reduce((n, c) => n + (cv[c.id] || 0), 0);
+  return `<div class="cats" role="group" aria-label="Which category should we launch first?">
+    ${CATEGORIES.map(c => {
+      const n = cv[c.id] || 0, sh = pct(n, total), on = mine === c.id;
+      const p = S.product(S.lineupFor(c.id));
+      return `<button type="button" class="glass cat ${on ? 'on' : ''}" data-cat="${esc(c.id)}" aria-pressed="${on}">
+        <span class="cat-top"><span class="cat-ico">${icon(ZONE_ICON[c.zone] || 'sparkle')}</span>
+          ${on ? `<span class="cat-mine">${icon('check')} Your pick</span>` : `<span class="cat-pick">Pick</span>`}</span>
+        <span class="cat-name">${esc(c.label)}</span>
+        ${p ? `<span class="cat-sub">${esc(p.name)}</span>` : ''}
+        <span class="bar" aria-hidden="true"><i style="width:${sh}%"></i></span>
+        <span class="cat-num"><b>${sh}%</b><span>${plural(n, 'vote')}</span></span>
+      </button>`;
+    }).join('')}
+  </div>`;
+}
+function countersHTML() {
+  const t = S.voteTotals();
+  const mine = S.myVotes();
+  const iVoted = mine.want.length || mine.category || Object.keys(mine.price || {}).length;
+  const people = Math.max(t.people || 0, iVoted ? 1 : 0); // you count, even before the server answers
+  const wants = S.products().reduce((n, p) => n + S.wantCount(p.id), 0);
+  return `<div class="counter glass">
+    ${people > 0
+      ? `<p class="big"><b>${people.toLocaleString('en-US')}</b> ${people === 1 ? 'person has' : 'people have'} voted</p>`
+      : `<p class="big"><b>${iVoted ? 'You’re one of the first' : 'Be the first to vote'}</b></p>`}
+    <ul class="c-list">
+      <li><span>${icon('heart')} “I want this” votes</span><b>${wants.toLocaleString('en-US')}</b></li>
+      <li><span>${icon('check')} Your votes</span><b>${mine.want.length}${mine.category ? ' + category' : ''}</b></li>
+    </ul>
+    <a class="btn btn-try btn-block" href="#vote">${icon('chart')} See all results</a>
+  </div>`;
+}
+function race() {
+  return `<section class="band" aria-labelledby="h-race"><div class="wrap">
+    <div class="sec-head">
+      <div><span class="eyebrow">Your say</span><h2 id="h-race">Which category should we launch first?</h2></div>
+      <p>Tap one. You can change your pick any time — the bars update live.</p>
+    </div>
+    <div class="race">
+      <div id="home-race">${raceHTML()}</div>
+      <div id="home-count">${countersHTML()}</div>
+    </div>
   </div></section>`;
 }
 
 function studio() {
-  const picks = ['orbit-shades', 'drift-beanie', 'noir-leather-gloves', 'pulse-runner'].map(id => S.product(id)).filter(Boolean);
+  const picks = ['sunglasses', 'hats', 'gloves', 'shoes'].map(c => S.product(S.lineupFor(c))).filter(Boolean);
   return `<section class="band" aria-labelledby="h-studio"><div class="wrap">
     <div class="studio glass">
       <div class="studio-copy">
         <span class="eyebrow">Try-On Studio</span>
-        <h2 id="h-studio">Open the camera.<br>Swap anything, live.</h2>
-        <p class="muted">One mirror for the whole store. Flick between hats, frames, gloves and shoes without reloading, change colours on the fly and save a snapshot of the looks you like.</p>
+        <h2 id="h-studio">Open the camera.<br>Try the whole line-up.</h2>
+        <p class="muted">One mirror for every test product. Flick between the hat, sunglasses, gloves and shoes without reloading, and vote from right inside the camera.</p>
         <ul class="ticks">
           <li>${icon('check')} Swap products without leaving the camera</li>
-          <li>${icon('check')} Recolour instantly — every shade in stock</li>
+          <li>${icon('check')} Vote “I want this” while you’re wearing it</li>
           <li>${icon('check')} Works on phone and laptop, no app needed</li>
         </ul>
         <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Open the Try-On Studio</a>
@@ -212,27 +233,16 @@ function studio() {
   </div></section>`;
 }
 
-function arrivals() {
-  return `<section class="band" aria-labelledby="h-new"><div class="wrap">
-    <div class="sec-head">
-      <div><span class="eyebrow">New arrivals</span><h2 id="h-new">Just landed — try them first</h2></div>
-      <a class="btn" href="#shop-new">View all ${icon('arrow')}</a>
+function notify() {
+  return `<section class="band" aria-labelledby="h-notify"><div class="wrap">
+    <div class="notify glass">
+      <div>
+        <span class="eyebrow">Not open yet</span>
+        <h2 id="h-notify">Tell me when RealityStore launches</h2>
+        <p class="muted">One email when the winning products are in stock. No spam, no sharing your address.</p>
+      </div>
+      ${launchForm('home-notify')}
     </div>
-    <div class="products rail" data-rail="new">${rail('new', 8)}</div>
-  </div></section>`;
-}
-
-function trust() {
-  const items = [
-    ['truck', 'Free delivery', `On orders over ${money(S.FREE_SHIPPING)}`],
-    ['refresh', '7-day easy returns', 'Change your mind? Send it back'],
-    ['cash', 'Cash on delivery', 'Pay when it reaches your door'],
-    ['lock', 'Camera stays on your device', 'Nothing from your feed is uploaded'],
-  ];
-  return `<section class="band trust-band" aria-label="Why shop with RealityStore"><div class="wrap">
-    <ul class="trust glass">
-      ${items.map(([ic, t, d]) => `<li><span class="t-ico">${icon(ic)}</span><span><b>${esc(t)}</b><span class="small muted">${esc(d)}</span></span></li>`).join('')}
-    </ul>
   </div></section>`;
 }
 
@@ -402,23 +412,82 @@ const CSS = `<style>
   .v-home .phone,.v-home .float-chip,.v-home .scan,.v-home .ring{animation:none}
   .v-home .scan{display:none}
 }
+.v-home .preview-pill{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;padding:5px 12px;border-radius:999px;font:600 13px var(--f-body);
+  color:var(--violet-lo);background:var(--sage);border:1px solid rgba(47,93,70,.24)}
+.v-home .preview-pill b{font-weight:800}
+.v-home .pp-dot{width:8px;height:8px;border-radius:50%;background:var(--violet);box-shadow:0 0 0 3px rgba(47,93,70,.18)}
+.v-home .lead b{display:block;color:var(--text);font-weight:600;margin-bottom:4px}
+.v-home .pbar-exp{font:600 12px var(--f-body);color:var(--violet)}
+.v-home .pbar .want-btn{flex:none;min-height:38px;padding:0 12px;font-size:12.5px}
+.v-home .fc-colors{flex-direction:row;align-items:center}
+.v-home .lineup{grid-template-columns:repeat(3,minmax(0,1fr))}
+.v-home .lineup-more{margin-top:18px;gap:10px 16px}
+.v-home .race{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+.v-home .cats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.v-home .cat{display:flex;flex-direction:column;gap:6px;text-align:left;padding:16px;border-radius:18px;transition:transform .15s,border-color .2s;font:inherit}
+.v-home .cat:hover{transform:translateY(-2px);border-color:var(--line-2)}
+.v-home .cat.on{border-color:rgba(47,93,70,.55);box-shadow:var(--shadow),0 0 0 2px rgba(47,93,70,.35)}
+.v-home .cat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.v-home .cat-ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(47,93,70,.09);border:1px solid rgba(47,93,70,.2)}
+.v-home .cat-ico .ico{color:var(--violet)}
+.v-home .cat.on .cat-ico{background:var(--gloss-violet);border-color:transparent}
+.v-home .cat.on .cat-ico .ico{color:#fff}
+.v-home .cat-pick{font:600 12px var(--f-body);color:var(--violet-hi);padding:4px 10px;border-radius:999px;border:1px solid var(--line-2)}
+.v-home .cat-mine{display:inline-flex;align-items:center;gap:4px;font:700 12px var(--f-body);color:#fff;padding:4px 10px;border-radius:999px;background:var(--gloss-violet)}
+.v-home .cat-mine .ico{width:13px;height:13px;stroke-width:2.6}
+.v-home .cat-name{font:700 17px var(--f-display);color:var(--text)}
+.v-home .cat-sub{font-size:13px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px}
+.v-home .cat-num{display:flex;justify-content:space-between;font-size:13px;color:var(--mist)}
+.v-home .cat-num b{font:700 15px var(--f-display);color:var(--violet)}
+.v-home .counter{padding:22px;border-radius:20px;display:grid;gap:14px}
+.v-home .counter .big{margin:0;font:500 18px/1.3 var(--f-display);color:var(--mist)}
+.v-home .counter .big b{display:block;font:800 clamp(26px,3vw,34px)/1.1 var(--f-display);color:var(--violet)}
+.v-home .c-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.v-home .c-list li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(47,93,70,.06);font-size:14px;color:var(--mist)}
+.v-home .c-list li span{display:inline-flex;align-items:center;gap:8px}
+.v-home .c-list .ico{width:16px;height:16px;color:var(--violet-hi)}
+.v-home .c-list b{font:700 16px var(--f-display);color:var(--text)}
+.v-home .notify{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 40px;align-items:center;padding:clamp(22px,4vw,44px);border-radius:26px;
+  background:radial-gradient(420px 300px at 90% 10%,rgba(143,184,160,.32),rgba(143,184,160,0) 70%),linear-gradient(135deg,#FFFFFF,var(--sage))}
+.v-home .notify h2{margin-bottom:.3em}
+.v-home .notify p.muted{margin:0}
+@media(max-width:1100px){.v-home .race{grid-template-columns:minmax(0,1fr)}.v-home .counter{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}.v-home .counter .btn{grid-column:1/-1}}
+@media(max-width:860px){.v-home .lineup{grid-template-columns:repeat(2,minmax(0,1fr))}.v-home .cats{grid-template-columns:repeat(2,minmax(0,1fr))}.v-home .notify{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){
+  .v-home .lineup{gap:12px}
+  .v-home .lineup .pcard{padding:8px;border-radius:16px}
+  .v-home .lineup .pcard .name{font-size:15px;line-height:1.25}
+  .v-home .cats{gap:10px}
+  .v-home .cat{padding:12px;gap:5px}
+  .v-home .cat-ico{width:34px;height:34px;border-radius:10px}
+  .v-home .cat-ico .ico{width:18px;height:18px}
+  .v-home .cat-name{font-size:15px}
+  .v-home .counter{grid-template-columns:minmax(0,1fr)}
+  .v-home .pbar{padding:8px 8px 8px 12px}
+}
 </style>`;
 
 export default {
   title: '',
   render() {
-    return `<div class="v-home">${CSS}${hero()}${zones()}${trending()}${steps()}${studio()}${arrivals()}${trust()}</div>`;
+    return `<div class="v-home">${CSS}${hero()}${lineup()}${steps()}${race()}${studio()}${notify()}</div>`;
   },
   mount(root) {
+    const onClick = e => {
+      const b = e.target.closest('[data-cat]');
+      if (!b) return;
+      const was = S.myCategory();
+      S.voteCategory(b.dataset.cat);
+      if (was !== b.dataset.cat) toast(`Your pick: ${CATEGORIES.find(c => c.id === b.dataset.cat)?.label || 'saved'}`, 'check');
+    };
+    root.addEventListener('click', onClick);
     const off = S.on(k => {
-      if (k !== 'wish' && k !== 'edits' && k !== 'custom') return;
-      root.querySelectorAll('[data-rail]').forEach(el => {
-        const tag = el.dataset.rail;
-        const x = el.scrollLeft;
-        el.innerHTML = rail(tag, 8);
-        el.scrollLeft = x;
-      });
+      if (k !== 'votes') return;
+      const r = root.querySelector('#home-race'), c = root.querySelector('#home-count');
+      if (r) r.innerHTML = raceHTML();
+      if (c) c.innerHTML = countersHTML();
     });
-    return off;
+    const offForm = bindLaunchForm(root);
+    return () => { off(); offForm(); root.removeEventListener('click', onClick); };
   },
 };

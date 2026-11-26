@@ -4,7 +4,8 @@ import { esc, money, icon, toast } from '../ui.js';
 
 const contactLog = []; // kept for this page; also sent to the store's database
 
-const PAGES = [
+const PV_LINE = 'We’re testing before we stock. Try them on and vote — the most-wanted products are the ones we’ll bring to the store.';
+const BASE_PAGES = [
   { id: 'how-it-works', nav: 'How try-on works', ic: 'camera', eyebrow: 'Try-On Studio', title: 'How live try-on works',
     lede: 'Your camera becomes a mirror. RealityStore finds your face, hands or body in the picture and places the product on you as you move — all inside your browser.' },
   { id: 'privacy', nav: 'Camera & privacy', ic: 'shield', eyebrow: 'Your camera, your call', title: 'Camera & privacy',
@@ -20,6 +21,15 @@ const PAGES = [
   { id: 'terms', nav: 'Terms', ic: 'lock', eyebrow: 'The small print', title: 'Terms of use',
     lede: 'The basic rules for using the store, in plain language.' },
 ];
+// Preview mode: nothing ships yet, so the delivery page becomes the launch page (same #returns route).
+const PV_OVERRIDES = {
+  'how-it-works': { lede: 'Your camera becomes a mirror. RealityStore finds your face, hands or body and places the product on you as you move — then you tell us if you want it.' },
+  faq: { lede: 'Quick answers about the test, voting, try-on and when the store opens.' },
+  returns: { nav: 'When we launch', ic: 'star', eyebrow: 'Public test', title: 'When will RealityStore launch?',
+    lede: 'Not yet — and on purpose. ' + PV_LINE },
+  contact: { lede: 'A question about the test, a product or the try-on? Send us a message.' },
+};
+const pages = () => S.isPreview() ? BASE_PAGES.map(p => ({ ...p, ...(PV_OVERRIDES[p.id] || {}) })) : BASE_PAGES;
 
 const CSS = `<style>
 .v-info .i-band{padding-top:clamp(26px,4vw,48px)}
@@ -88,6 +98,13 @@ const CSS = `<style>
 .v-info .tmpl{display:flex;gap:12px;align-items:flex-start;border-color:rgba(194,65,59,0.45);background:rgba(194,65,59,0.08)}
 .v-info .tmpl .ico{color:var(--danger);margin-top:1px}
 .v-info .terms h3{margin-top:4px}
+.v-info .faq-list summary .q-new{font:700 11px var(--f-body);padding:2px 8px;border-radius:999px;background:rgba(47,93,70,.12);color:var(--violet-lo);margin-left:8px;vertical-align:middle}
+.v-info .launch-steps .step.now{border-color:rgba(47,93,70,.45);box-shadow:0 0 0 1px rgba(47,93,70,.25),var(--shadow)}
+.v-info .launch-steps .step.now .n{display:inline-flex;gap:6px;align-items:center}
+.v-info .launch-steps .step.now .n::after{content:"We are here";font:700 11px var(--f-body);padding:2px 8px;border-radius:999px;background:var(--gloss-violet);color:#fff}
+.v-info .nl{display:flex;gap:10px;flex-wrap:wrap}
+.v-info .nl .input{flex:1 1 240px}
+.v-info .nl .btn{flex:none}
 .v-info .terms section+section{border-top:1px solid var(--line);padding-top:18px;margin-top:18px}
 @media(max-width:1000px){.v-info .steps{grid-template-columns:repeat(2,minmax(0,1fr))}.v-info .cards3{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){
@@ -113,7 +130,8 @@ function howItWorks() {
     ['grid', 'Pick something', 'Open any product and tap <b>Try on</b>, or go straight to the Try-On Studio and browse from there.'],
     ['camera', 'Allow the camera', 'Your browser asks once. The video is processed on your phone or computer — it is never uploaded.'],
     ['eye', 'Line up and move', 'Face the camera, raise a hand or step back. The product follows you as you turn and tilt.'],
-    ['sparkle', 'Snap, compare, buy', 'Switch colours live, save a snapshot to your looks, and add your favourite to the bag.'],
+    S.isPreview() ? ['heart', 'Snap, compare, vote', 'Switch colours live, save a snapshot, then tap <b>I want this</b> and tell us what you would pay.']
+      : ['sparkle', 'Snap, compare, buy', 'Switch colours live, save a snapshot to your looks, and add your favourite to the bag.'],
   ];
   return `<section class="glass pad"><h2>Four steps, about ten seconds</h2>
       <p>There is nothing to install. Try-on runs on the web page itself using MediaPipe, Google's on-device tracking models, with the product drawn on top of your camera picture.</p>
@@ -144,7 +162,8 @@ function howItWorks() {
         <li>${icon('flip')}<span><b>Plain background helps</b>, and take off hats before trying another one.</span></li>
       </ul></section>
     </div>
-    <section class="glass pad cta"><div><h2>Ready to see it on you?</h2><p>Pick anything from the catalogue and try it in seconds.</p></div>
+    ${S.isPreview() ? `<p class="note" style="margin:0"><b>Right now RealityStore is a public test.</b> ${PV_LINE}</p>` : ''}
+    <section class="glass pad cta"><div><h2>Ready to see it on you?</h2><p>${S.isPreview() ? 'Six products, one per category. Try one on in seconds.' : 'Pick anything from the catalogue and try it in seconds.'}</p></div>
       <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Open the Try-On Studio</a></section>`;
 }
 
@@ -176,31 +195,74 @@ function privacy() {
     </section>
     <section class="glass pad"><h2>What the store keeps</h2>
       <div class="cards2">
-        <div class="mini"><h3>${icon('truck')} To deliver your order</h3><p>Your name, phone, delivery address, what you ordered and how you chose to pay. We need these to get the parcel to you and to handle returns.</p></div>
+        ${S.isPreview() ? `<div class="mini"><h3>${icon('heart')} Your votes</h3><p>Which products you want, your category pick and the prices you’d pay — linked only to a random id made in your browser, not to your name, face or camera.</p></div>`
+          : `<div class="mini"><h3>${icon('truck')} To deliver your order</h3><p>Your name, phone, delivery address, what you ordered and how you chose to pay. We need these to get the parcel to you and to handle returns.</p></div>`}
         <div class="mini"><h3>${icon('user')} If you make an account</h3><p>Your name and email, plus your wishlist, orders and saved looks so you can find them again.</p></div>
         <div class="mini"><h3>${icon('chart')} Simple shop counts</h3><p>How often products are viewed, tried on and bought — counted per product, not linked to your face or camera.</p></div>
         <div class="mini"><h3>${icon('x')} What we never keep</h3><p>Camera video, face or body measurements, or card numbers. Card payments are not taken on this site yet.</p></div>
       </div>
-      <p class="note" style="margin:16px 0 0">Orders and contact messages are stored securely in RealityStore’s database so we can deliver and reply. Your wishlist, bag, saved looks and account profile stay in your own browser; clearing this site’s data removes them.</p>
+      <p class="note" style="margin:16px 0 0">${S.isPreview() ? 'Votes, suggestions, launch sign-ups and contact messages' : 'Orders and contact messages'} are stored securely in RealityStore’s database so we can deliver and reply. Your wishlist, bag, saved looks and account profile stay in your own browser; clearing this site’s data removes them.</p>
     </section>`;
 }
 
-const FAQ = () => [
+const link = (h, t) => `<a href="#${h}" style="color:var(--violet-hi)">${t}</a>`;
+// [question, answer, isNew]
+const PREVIEW_FAQ = () => [
+  ['Can I buy now?', `Not yet — we’re testing. RealityStore shows one product per category so we can learn what people really want before we buy any stock. Try them on, tap <b>I want this</b> on the ones you like, and ${link('vote', 'leave your email on the vote page')} to hear the moment the store opens.`, true],
+  ['What happens to my vote?', 'Every “I want this”, category pick and price answer is counted per product. When the test ends, the most-wanted products are the ones we order and bring to the store, and the price answers help us set a fair launch price. The counts you see on each product are the real totals so far.', true],
+  ['Is voting anonymous?', 'Yes. Your browser makes a random id the first time you vote and keeps it, so you can change your votes later. No account, name or email is needed. Clearing this site’s data starts you with a new id.', true],
+  ['When will RealityStore launch?', `There is no date yet: we open once the votes show what people want and that stock has arrived. ${link('returns', 'Read how the launch works')}.`, true],
+  ['Can I suggest something else to stock?', `Please do. The ${link('vote', 'vote page')} has a short “What else should we stock?” box. Your email is optional.`, true],
+];
+const COMMON_FAQ = () => [
   ['How does the try-on work?', 'When you tap Try on, your browser opens the camera and tracking models find your face, hands or body in each frame. RealityStore then draws the product in the right place, size and angle, so it moves with you. See <a href="#how-it-works" style="color:var(--violet-hi)">How try-on works</a> for the details.'],
   ['Is my camera recorded or uploaded?', 'No. The video is processed on your own device, inside the browser. Nothing from the camera is uploaded or recorded. Snapshots are only saved when you tap the snapshot button, and only in your browser. Read more on <a href="#privacy" style="color:var(--violet-hi)">Camera &amp; privacy</a>.'],
   ['Why does it ask for camera permission?', 'Browsers always ask before a website can use your camera — it is a safety feature. You only need to allow it for the try-on. Everything else in the store works without it.'],
   ['It says the camera is blocked. What do I do?', 'You (or your browser) said no earlier. Open the site settings for this page — the icon next to the web address on Chrome, or aA → Website Settings on Safari — set Camera to Allow and reload. Also close other apps that might be using the camera, like video calls.'],
   ['Which phones and browsers work?', 'Recent Chrome or Samsung Internet on Android, Safari on iPhone and iPad, and Chrome, Edge, Safari or Firefox on a laptop with a webcam. Very old phones may run the try-on slowly.'],
-  ['How accurate are the sizes?', 'Try-on is great for judging style, colour and proportion — how wide a frame looks on your face, or how a hat sits. It does not measure you, so please use the size guide on each product page for fit. If the size is wrong, exchanges are easy.'],
+  ['How accurate are the sizes?', 'Try-on is great for judging style, colour and proportion — how wide a frame looks on your face, or how a hat sits. It does not measure you, so please use the size guide on each product page for fit. ' + (S.isPreview() ? '' : ' If the size is wrong, exchanges are easy.')],
   ['Why do jackets and shoes look less detailed?', 'Hats, glasses and gloves are tracked closely in 3D. Jackets are a live preview that follows your shoulders and hips, and shoes and socks are in beta: they need your whole body, including your feet, in the frame. Use them for colour and style rather than exact fit.'],
+];
+const SHOP_FAQ = () => [
   [`How long does delivery take, and what does it cost?`, `Usually 2–4 working days in major cities and 4–7 elsewhere. Delivery is free on orders over ${money(S.FREE_SHIPPING)}; below that it is a flat ${money(S.SHIPPING_FEE)}.`],
   ['Can I return something?', 'Yes — within 7 days of delivery for unused items with the tags still on. You can also exchange for another size or colour. See <a href="#returns" style="color:var(--violet-hi)">Delivery &amp; returns</a>.'],
-  ['How can I pay?', 'Cash on delivery is available across Pakistan — you pay the rider when the parcel arrives. Online payment options are being set up and will be listed at checkout when they are ready.'],
+  ['How can I pay?', 'Cash on delivery is available across Pakistan — you pay the rider when the parcel arrives. Online payment options are being set up and will be listed at checkout when they are ready.']
 ];
+const FAQ = () => S.isPreview() ? [...PREVIEW_FAQ(), ...COMMON_FAQ()] : [...COMMON_FAQ(), ...SHOP_FAQ()];
 function faq() {
-  return `<section class="glass pad faq-list">${FAQ().map(([q, a], i) => `<details class="faq" ${i === 0 ? 'open' : ''}><summary>${q}</summary><p>${a}</p></details>`).join('')}</section>
-    <section class="glass pad cta"><div><h2>Still stuck?</h2><p>Send us a message and include your order number if you have one.</p></div>
+  return `<section class="glass pad faq-list">${FAQ().map(([q, a, nw], i) => `<details class="faq" ${i === 0 ? 'open' : ''}><summary><span>${q}${nw ? '<span class="q-new">Test</span>' : ''}</span></summary><p>${a}</p></details>`).join('')}</section>
+    <section class="glass pad cta"><div><h2>Still stuck?</h2><p>${S.isPreview() ? 'Send us a message — we read every one.' : 'Send us a message and include your order number if you have one.'}</p></div>
       <a class="btn btn-lg" href="#contact">${icon('mail')} Contact us</a></section>`;
+}
+
+function launch() {
+  const n = S.products().length;
+  const steps = [
+    ['camera', 'Test', `${n} products, one per category. You try them on and vote.`, true],
+    ['chart', 'Count', 'We add up “I want this” votes, category picks and price answers.'],
+    ['bag', 'Stock', 'We order the most-wanted products — and only those.'],
+    ['sparkle', 'Open', 'The store opens for orders, and everyone on the list hears first.'],
+  ];
+  return `<section class="glass pad"><h2>No launch date yet</h2>
+      <p>We would rather open late with products people want than open early with stock nobody asked for. The store opens when two things are true: the votes show clearly what people want, and that stock has arrived.</p>
+      <p style="margin:0">Until then, nothing can be bought on RealityStore — there is no checkout, no payment and no delivery.</p></section>
+    <section class="glass pad"><h2>How the launch works</h2>
+      <div class="steps launch-steps">${steps.map(([ic, h, p, now], i) => `<div class="glass step ${now ? 'now' : ''}"><span class="n">Step ${i + 1}</span><span class="ic">${icon(ic)}</span><h3>${h}</h3><p>${p}</p></div>`).join('')}</div>
+    </section>
+    <section class="glass pad" id="launch-news"><h2>Hear when it opens</h2>
+      <p>Leave your email and we’ll send one message when the store opens. That’s all we use it for.</p>
+      <form class="nl" id="launch-form" novalidate>
+        <label class="sr-only" for="ln-email">Email</label>
+        <input class="input" id="ln-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com">
+        <button class="btn btn-try" type="submit">${icon('mail')} Tell me at launch</button>
+      </form>
+      <span class="err" id="ln-err" role="alert"></span>
+    </section>
+    <div class="cards2">
+      <section class="glass pad"><h2 style="font-size:22px">Delivery &amp; returns</h2><p style="margin:0">Delivery areas, fees and the returns policy will be published here before the first sale. Nothing is promised until then.</p></section>
+      <section class="glass pad"><h2 style="font-size:22px">Help decide</h2><p>Your votes decide which products open the store.</p>
+        <div class="row"><a class="btn btn-try" href="#tryon">${icon('camera')} Try them on</a><a class="btn" href="#vote">${icon('chart')} Vote</a></div></section>
+    </div>`;
 }
 
 function returns() {
@@ -256,7 +318,7 @@ function contactForm() {
       <div class="field"><label for="c-name">Your name</label><input class="input" id="c-name" name="name" autocomplete="name"><span class="err" data-err="name"></span></div>
       <div class="field"><label for="c-email">Email</label><input class="input" id="c-email" name="email" type="email" autocomplete="email" inputmode="email"><span class="err" data-err="email"></span></div>
     </div>
-    <div class="field"><label for="c-order">Order number <span class="dim">(optional)</span></label><input class="input" id="c-order" name="order" placeholder="e.g. RS7K2M9QXA" autocapitalize="characters"><span class="err" data-err="order"></span></div>
+    <div class="field" ${S.isPreview() ? 'hidden' : ''}><label for="c-order">Order number <span class="dim">(optional)</span></label><input class="input" id="c-order" name="order" placeholder="e.g. RS7K2M9QXA" autocapitalize="characters"><span class="err" data-err="order"></span></div>
     <div class="field"><label for="c-msg">Message</label><textarea class="input" id="c-msg" name="message" rows="5" placeholder="How can we help?"></textarea><span class="err" data-err="message"></span></div>
     <button class="btn btn-try btn-lg" type="submit">${icon('mail')} Send message</button>
   </form>`;
@@ -274,7 +336,8 @@ function contactDone(m) {
 function about() {
   return `<section class="glass pad"><h2>What RealityStore is</h2>
       <p>RealityStore is an online accessories and outerwear store — hats, sunglasses, jackets, gloves, shoes and socks — where every product can be tried on live through your phone or laptop camera before you buy it.</p>
-      <p style="margin:0">The name comes from <i>mirror</i>: the camera becomes one, and the product appears on you, moving as you move.</p></section>
+      <p style="margin:0">The camera becomes a mirror, and the product appears on you, moving as you move.</p>
+      ${S.isPreview() ? `<p class="note" style="margin:14px 0 0"><b>Right now we’re in a public test.</b> ${PV_LINE}</p>` : ''}</section>
     <section class="glass pad"><h2>Why try-on?</h2>
       <p>Buying accessories online is mostly guesswork. Will these frames be too wide? Does this colour work with my skin tone? Is a bucket hat really me? Photos on a model don't answer that.</p>
       <ul class="ticks">
@@ -285,12 +348,12 @@ function about() {
     <section class="glass pad"><h2>Three colours, one idea</h2>
       <p>The whole store is built from three colours, each with a single job.</p>
       <div class="brand">
-        <div><div class="sw" style="background:var(--ink)"></div><h3>Midnight Ink</h3><p class="small" style="margin:0">The dark glass case. A calm base that lets products glow.</p></div>
-        <div><div class="sw" style="background:var(--gloss-violet)"></div><h3>Electric Violet</h3><p class="small" style="margin:0">The gloss and the camera. Every try-on button is violet.</p></div>
-        <div><div class="sw" style="background:rgba(47,93,70,0.036)"><span class="price">Rs 3,499</span></div><h3>Volt Lime</h3><p class="small" style="margin:0">Kept for prices and buy buttons only — so the thing that costs money is always the brightest thing on screen.</p></div>
+        <div><div class="sw" style="background:var(--ink)"></div><h3>Soft Cream</h3><p class="small" style="margin:0">The background. Warm and calm, so the products stand out.</p></div>
+        <div><div class="sw" style="background:var(--sage)"></div><h3>Light Sage Mist</h3><p class="small" style="margin:0">The surfaces — cards, panels and product plinths.</p></div>
+        <div><div class="sw" style="background:var(--gloss-violet)"></div><h3>Forest Sage</h3><p class="small" style="margin:0">Every action: try-on, vote and send buttons, counts and active states.</p></div>
       </div></section>
     <section class="glass pad"><h2>A note on honesty</h2>
-      <p>This is a working store in development. The products, prices and ratings you see are sample data, and there are no customer reviews or press quotes on this site because we have not earned any yet.</p>
+      <p>${S.isPreview() ? 'This is a public test, not a shop yet. Prices are expected prices and may change after the vote. The vote counts you see are real totals, and there are no customer reviews or press quotes because we have not earned any yet.' : 'This is a working store in development. The products, prices and ratings you see are sample data, and there are no customer reviews or press quotes on this site because we have not earned any yet.'}</p>
       <p style="margin:0">What is real: the try-on runs live on your device, and your camera picture never leaves it.</p></section>
     <section class="glass pad cta"><div><h2>See it for yourself</h2><p>Try on a hat in under ten seconds.</p></div>
       <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Open the Try-On Studio</a></section>`;
@@ -313,13 +376,14 @@ function terms() {
     </section>`;
 }
 
-const BODY = { 'how-it-works': howItWorks, privacy, faq, returns, contact, about, terms };
+const BODY = { 'how-it-works': howItWorks, privacy, faq, returns: () => (S.isPreview() ? launch() : returns()), contact, about, terms };
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
 
 export default {
-  title: param => PAGES.find(p => p.id === param)?.nav || 'Help',
+  title: param => pages().find(p => p.id === param)?.nav || 'Help',
   render(param) {
+    const PAGES = pages();
     const pg = PAGES.find(p => p.id === param) || PAGES[0];
     return `<div class="v-info">${CSS}<section class="wrap i-band">
       <header class="glass i-hero"><span class="orb a"></span><span class="orb b"></span>
@@ -337,6 +401,21 @@ export default {
     </section></div>`;
   },
   mount(root, param) {
+    if (param === 'returns' && S.isPreview()) {
+      const onSub = e => {
+        if (e.target.id !== 'launch-form') return;
+        e.preventDefault();
+        const f = e.target, v = f.email.value.trim(), err = root.querySelector('#ln-err');
+        if (!EMAIL_RE.test(v)) { err.textContent = 'Please enter a valid email.'; f.email.classList.add('bad'); f.email.focus(); return; }
+        err.textContent = ''; f.email.classList.remove('bad');
+        const btn = f.querySelector('button'); btn.disabled = true;
+        const done = () => { f.outerHTML = `<p class="note" style="margin:0"><b>You’re on the list.</b> We’ll email ${esc(v)} once, when the store opens.</p>`; };
+        S.sendMessage('newsletter', { email: v }).then(done)
+          .catch(ex => { btn.disabled = false; toast(ex.message === 'offline' ? 'You seem to be offline — please try again in a moment' : ex.message, 'mail'); });
+      };
+      root.addEventListener('submit', onSub);
+      return () => root.removeEventListener('submit', onSub);
+    }
     if (param !== 'contact') return;
     const box = () => root.querySelector('#contact-box');
     const onSubmit = e => {

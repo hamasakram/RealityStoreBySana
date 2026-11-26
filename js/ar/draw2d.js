@@ -10,6 +10,13 @@ const mid = (a, b) => ({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 });
 const perp = d => ({ x: -d.y, y: d.x });
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
+// Real material from the product photo, tiled at a size relative to the body part, then shaded on top.
+function texPattern(ctx, tex, scale) {
+  if (!tex || !tex.img || !tex.img.complete || !tex.img.naturalWidth) return null;
+  const p = ctx.createPattern(tex.img, 'repeat');
+  if (p && p.setTransform) p.setTransform(new DOMMatrix().scale(Math.max(0.15, scale / tex.img.naturalWidth)));
+  return p;
+}
 function px(lms, w, h) { return lms.map(p => ({ x: p.x * w, y: p.y * h, vis: p.visibility ?? 1 })); }
 
 // ------------------------------------------------------------------ smoothing helper
@@ -27,7 +34,7 @@ export class Smoother {
 const FINGERS = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16], [17, 18, 19, 20]];
 const FW = [0.3, 0.245, 0.255, 0.235, 0.2]; // finger widths relative to palm size
 
-export function drawGlove(ctx, lmsNorm, w, h, model, hex, fit) {
+export function drawGlove(ctx, lmsNorm, w, h, model, hex, fit, tex) {
   const P = px(lmsNorm, w, h);
   const s = dist(P[0], P[9]) * (fit.scale || 1);  // palm size
   const base = hex, dark = shade(hex, -0.5), light = shade(hex, 0.35);
@@ -62,10 +69,14 @@ export function drawGlove(ctx, lmsNorm, w, h, model, hex, fit) {
   poly(ctx, palm); ctx.stroke();
   poly(ctx, [wristL, wristR, cuffR, cuffL]); ctx.stroke();
   // 2) fill pass
-  ctx.fillStyle = grad; ctx.strokeStyle = grad;
-  poly(ctx, palm); ctx.fill();
-  poly(ctx, [wristL, wristR, cuffR, cuffL]); ctx.fill();
-  FINGERS.forEach((f, i) => { fingerPath(f); ctx.lineWidth = s * FW[i]; ctx.stroke(); });
+  const pat = texPattern(ctx, tex, s * 0.5);
+  const paint = style => {
+    ctx.fillStyle = style; ctx.strokeStyle = style;
+    poly(ctx, palm); ctx.fill();
+    poly(ctx, [wristL, wristR, cuffR, cuffL]); ctx.fill();
+    FINGERS.forEach((f, i) => { fingerPath(f); ctx.lineWidth = s * FW[i]; ctx.stroke(); });
+  };
+  if (pat) { paint(pat); ctx.globalAlpha = 0.4; paint(grad); ctx.globalAlpha = 1; } else paint(grad);
   // 3) knuckle creases + highlight
   ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = Math.max(1.5, s * 0.025);
   FINGERS.slice(1).forEach(f => [f[1], f[2]].forEach(j => {
@@ -99,7 +110,7 @@ export function drawGlove(ctx, lmsNorm, w, h, model, hex, fit) {
 
 // ================================================================== JACKETS (pose)
 // pose ids: 11 L shoulder, 12 R shoulder, 13/14 elbows, 15/16 wrists, 23/24 hips
-export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit) {
+export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit, tex) {
   const P = px(lmsNorm, w, h);
   const LS = P[11], RS = P[12];
   if (LS.vis < 0.5 || RS.vis < 0.5) return false;
@@ -122,6 +133,7 @@ export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit) {
   grad.addColorStop(0, shade(hex, -0.35)); grad.addColorStop(0.35, base); grad.addColorStop(0.62, light); grad.addColorStop(1, shade(hex, -0.35));
 
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const jpat = texPattern(ctx, tex, sw * 0.6);
   // sleeves
   const sleeve = (S, E, Wr, sgn) => {
     const sOk = E.vis > 0.4;
@@ -131,8 +143,10 @@ export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit) {
     const wr = wOk ? add(Wr, nrm(v(Wr, elb)), sw * 0.12) : add(elb, nrm(v(start, elb)), sw * 0.6);
     ctx.strokeStyle = dark; ctx.lineWidth = sw * 0.42 + 5;
     ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(elb.x, elb.y); ctx.lineTo(wr.x, wr.y); ctx.stroke();
-    ctx.strokeStyle = grad; ctx.lineWidth = sw * 0.42;
-    ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(elb.x, elb.y); ctx.lineTo(wr.x, wr.y); ctx.stroke();
+    const armPath = () => { ctx.beginPath(); ctx.moveTo(start.x, start.y); ctx.lineTo(elb.x, elb.y); ctx.lineTo(wr.x, wr.y); };
+    ctx.lineWidth = sw * 0.42;
+    if (jpat) { ctx.strokeStyle = jpat; armPath(); ctx.stroke(); ctx.globalAlpha = 0.45; }
+    ctx.strokeStyle = grad; armPath(); ctx.stroke(); ctx.globalAlpha = 1;
     // cuff
     const cd = nrm(v(elb, wr));
     ctx.strokeStyle = model === 'denim' ? shade(hex, -0.25) : dark; ctx.lineWidth = sw * 0.36;
@@ -147,8 +161,9 @@ export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit) {
 
   // torso
   const body = [R1, add(neckTop, across, -sw * 0.18), add(neckTop, across, sw * 0.18), L1, LH, RH];
-  ctx.fillStyle = grad; ctx.strokeStyle = dark; ctx.lineWidth = 4;
-  poly(ctx, body); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle = dark; ctx.lineWidth = 4;
+  if (jpat) { ctx.fillStyle = jpat; poly(ctx, body); ctx.fill(); ctx.globalAlpha = 0.45; }
+  ctx.fillStyle = grad; poly(ctx, body); ctx.fill(); ctx.globalAlpha = 1; ctx.stroke();
   const hemL = LH, hemR = RH;
   // collar
   const nL = add(neckTop, across, sw * 0.2), nR = add(neckTop, across, -sw * 0.2), vPt = add(neckTop, down, sw * (model === 'denim' ? 0.3 : 0.22));
@@ -190,7 +205,7 @@ export function drawJacket(ctx, lmsNorm, w, h, model, hex, fit) {
 
 // ================================================================== SHOES & SOCKS (pose)
 // 25/26 knees · 27/28 ankles · 29/30 heels · 31/32 toes (foot index)
-export function drawFeet(ctx, lmsNorm, w, h, product, hex, fit) {
+export function drawFeet(ctx, lmsNorm, w, h, product, hex, fit, tex) {
   const P = px(lmsNorm, w, h);
   let drawn = 0;
   for (const [knee, ankle, heel, toe] of [[25, 27, 29, 31], [26, 28, 30, 32]]) {
@@ -203,16 +218,18 @@ export function drawFeet(ctx, lmsNorm, w, h, product, hex, fit) {
     if (toA.x * n.x + toA.y * n.y < 0) n = { x: -n.x, y: -n.y }; // n points up the leg
     const origin = add(H, d, -fl * 0.12);
     const at = (u, vv) => add(add(origin, d, u * fl), n, vv * fl + (fit.lift || 0) * fl);
-    if (product.category === 'socks') drawSock(ctx, at, A, K, n, fl, product.model, hex);
-    else drawShoe(ctx, at, fl, product.model, hex);
+    if (product.category === 'socks') drawSock(ctx, at, A, K, n, fl, product.model, hex, texPattern(ctx, tex, fl * 0.45));
+    else drawShoe(ctx, at, fl, product, hex);
     drawn++;
   }
   return drawn > 0;
 }
 
-function drawShoe(ctx, at, fl, model, hex) {
-  const dark = shade(hex, -0.5), light = shade(hex, 0.35);
-  const soleCol = ['#ECEDF3', '#F2F2F5'].includes(hex.toUpperCase()) ? '#B9BCCB' : '#ECEDF3';
+function drawShoe(ctx, at, fl, product, hex) {
+  const model = product.model;
+  const dark = shade(hex, -0.5), light = product.accent || shade(hex, 0.35);
+  const soleCol = product.sole || (['#ECEDF3', '#F2F2F5'].includes(hex.toUpperCase()) ? '#B9BCCB' : '#ECEDF3');
+  if (model === 'slide') return drawSlide(ctx, at, fl, hex, product.accent || '#F2F2F0');
   ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   const shape = pts => { ctx.beginPath(); pts.forEach(([u, vv], i) => { const p = at(u, vv); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.closePath(); };
   const g0 = at(0, 0.5), g1 = at(0, -0.05);
@@ -236,7 +253,10 @@ function drawShoe(ctx, at, fl, model, hex) {
     // side stripe
     ctx.strokeStyle = light; ctx.lineWidth = Math.max(3, fl * 0.04);
     const s0 = at(0.16, 0.12), s1 = at(0.62, 0.2); line(ctx, s0, s1);
-    if (model === 'hightop') { ctx.strokeStyle = dark; ctx.lineWidth = fl * 0.06; line(ctx, at(0.06, ankleH), at(0.3, ankleH)); }
+    if (model === 'hightop') {
+      ctx.strokeStyle = dark; ctx.lineWidth = fl * 0.06; line(ctx, at(0.06, ankleH), at(0.3, ankleH));
+      if (product.accent) { ctx.strokeStyle = product.accent; ctx.lineWidth = fl * 0.05; line(ctx, at(0.02, ankleH * 0.6), at(0.02, ankleH * 0.95)); }
+    }
   }
   // gloss
   ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = Math.max(2, fl * 0.025);
@@ -244,7 +264,29 @@ function drawShoe(ctx, at, fl, model, hex) {
   ctx.restore();
 }
 
-function drawSock(ctx, at, A, K, n, fl, model, hex) {
+// One-strap slide: thick moulded sole and a wide strap over the instep (toes stay visible).
+function drawSlide(ctx, at, fl, hex, accent) {
+  ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  const shape = pts => { ctx.beginPath(); pts.forEach(([u, vv], i) => { const p = at(u, vv); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.closePath(); };
+  // sole
+  shape([[-0.03, 0.05], [0.2, 0.06], [0.7, 0.05], [1.03, 0.05], [1.06, 0.0], [1.0, -0.07], [0.05, -0.08], [-0.05, -0.03]]);
+  ctx.fillStyle = shade(hex, -0.15); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.45)'; ctx.lineWidth = 2; ctx.stroke();
+  shape([[-0.02, 0.05], [1.02, 0.05], [1.02, 0.02], [-0.02, 0.02]]); ctx.fillStyle = shade(hex, 0.12); ctx.fill(); // footbed edge
+  // strap
+  const g0 = at(0.5, 0.34), g1 = at(0.5, 0.04);
+  const grad = ctx.createLinearGradient(g0.x, g0.y, g1.x, g1.y);
+  grad.addColorStop(0, shade(hex, 0.25)); grad.addColorStop(0.5, hex); grad.addColorStop(1, shade(hex, -0.35));
+  shape([[0.34, 0.05], [0.38, 0.27], [0.5, 0.34], [0.64, 0.3], [0.74, 0.05]]);
+  ctx.fillStyle = grad; ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 2; ctx.stroke();
+  // printed logo band on the strap
+  ctx.strokeStyle = accent; ctx.lineWidth = Math.max(3, fl * 0.05);
+  const a = at(0.42, 0.2), b = at(0.66, 0.19); ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = Math.max(2, fl * 0.02);
+  const c = at(0.42, 0.28), d = at(0.6, 0.31); ctx.beginPath(); ctx.moveTo(c.x, c.y); ctx.lineTo(d.x, d.y); ctx.stroke();
+  ctx.restore();
+}
+
+function drawSock(ctx, at, A, K, n, fl, model, hex, pat) {
   const dark = shade(hex, -0.45), light = shade(hex, 0.4);
   ctx.save(); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   // leg tube from ankle up toward the knee
@@ -258,13 +300,16 @@ function drawSock(ctx, at, A, K, n, fl, model, hex) {
   // foot part
   const shape = pts => { ctx.beginPath(); pts.forEach(([u, vv], i) => { const p = at(u, vv); i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y); }); ctx.closePath(); };
   shape([[0.04, 0.0], [0.02, 0.2], [0.18, 0.3], [0.5, 0.2], [0.9, 0.12], [1.02, 0.05], [1.0, -0.02], [0.1, -0.03]]);
-  ctx.fillStyle = grad; ctx.fill(); ctx.strokeStyle = dark; ctx.lineWidth = 2.5; ctx.stroke();
+  if (pat) { ctx.fillStyle = pat; ctx.fill(); ctx.globalAlpha = 0.45; }
+  ctx.fillStyle = grad; ctx.fill(); ctx.globalAlpha = 1; ctx.strokeStyle = dark; ctx.lineWidth = 2.5; ctx.stroke();
   // heel + toe contrast
   ctx.fillStyle = dark;
   shape([[0.02, 0.0], [0.02, 0.16], [0.14, 0.12], [0.14, -0.02]]); ctx.fill();
   shape([[0.86, 0.12], [1.02, 0.05], [1.0, -0.02], [0.86, -0.02]]); ctx.fill();
   // leg tube
-  ctx.strokeStyle = grad; ctx.lineWidth = tw; line(ctx, A, top);
+  ctx.lineWidth = tw;
+  if (pat) { ctx.strokeStyle = pat; line(ctx, A, top); ctx.globalAlpha = 0.45; }
+  ctx.strokeStyle = grad; line(ctx, A, top); ctx.globalAlpha = 1;
   // stripes / cuff
   const across = perp(legDir);
   if (model === 'stripe') {

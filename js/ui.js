@@ -72,8 +72,69 @@ export function productArt(p, colorHex) {
   return art(p, colorHex);
 }
 
+// ---------------- preview voting helpers ----------------
+// "I want this" vote button. Handled globally by app.js (data-act="want"); every button on the page is kept in sync below.
+function wantInner(id) {
+  const on = S.wantsIt(id), n = S.wantCount(id);
+  return on
+    ? `${icon('check')}<span class="wl">You want this</span>${n ? `<span class="wn">${n}</span>` : ''}`
+    : `${icon('heart')}<span class="wl">I want this</span>${n ? `<span class="wn">${n}</span>` : ''}`;
+}
+export function wantBtn(p, cls = 'btn-sm') {
+  const on = S.wantsIt(p.id);
+  return `<button type="button" class="btn want-btn ${cls} ${on ? 'on' : ''}" data-act="want" data-id="${esc(p.id)}" aria-pressed="${on}" aria-label="${on ? 'You want' : 'I want'} ${esc(p.name)}${S.wantCount(p.id) ? ` — ${S.wantCount(p.id)} ${S.wantCount(p.id) === 1 ? 'vote' : 'votes'}` : ''}">${wantInner(p.id)}</button>`;
+}
+export function syncWantButtons(scope = document) {
+  scope.querySelectorAll('button[data-act="want"]').forEach(b => {
+    const id = b.dataset.id, on = S.wantsIt(id), n = S.wantCount(id);
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+    const name = (b.getAttribute('aria-label') || '').replace(/^You want |^I want /, '').replace(/ — \d+ votes?$/, '');
+    b.setAttribute('aria-label', `${on ? 'You want' : 'I want'} ${name}${n ? ` — ${n} ${n === 1 ? 'vote' : 'votes'}` : ''}`);
+    b.innerHTML = wantInner(id);
+  });
+}
+S.on(k => { if (k === 'votes') syncWantButtons(); });
+
+export const pct = (n, total) => total > 0 ? Math.round((n / total) * 100) : 0;
+export const plural = (n, one, many = one + 's') => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;
+
+// "Tell me when RealityStore launches" email form. Use launchForm(id) in render, bindLaunchForm(root) in mount.
+export function launchForm(id, { btn = 'Notify me' } = {}) {
+  return `<form class="launch-form" data-launch novalidate>
+    <label class="sr-only" for="${esc(id)}">Your email</label>
+    <div class="lf-row">
+      <input class="input" id="${esc(id)}" name="email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+      <button class="btn btn-buy" type="submit">${icon('mail')} ${esc(btn)}</button>
+    </div>
+    <p class="lf-msg small" aria-live="polite"></p>
+  </form>`;
+}
+export function bindLaunchForm(root) {
+  const handlers = [];
+  root.querySelectorAll('form[data-launch]').forEach(f => {
+    const msg = f.querySelector('.lf-msg');
+    const h = async e => {
+      e.preventDefault();
+      const v = f.email.value.trim();
+      msg.classList.remove('ok', 'bad');
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { msg.textContent = 'Please enter a valid email address.'; msg.classList.add('bad'); f.email.classList.add('bad'); f.email.focus(); return; }
+      f.email.classList.remove('bad');
+      const b = f.querySelector('button'); b.disabled = true;
+      try {
+        if (S.api.ok) await S.sendMessage('newsletter', { email: v });
+        f.reset();
+        msg.innerHTML = `${icon('check')} You’re on the list. We’ll email you once, when RealityStore opens.`; msg.classList.add('ok');
+      } catch (err) { msg.textContent = 'That didn’t go through — please try again. (' + err.message + ')'; msg.classList.add('bad'); }
+      finally { b.disabled = false; }
+    };
+    f.addEventListener('submit', h); handlers.push([f, h]);
+  });
+  return () => handlers.forEach(([f, h]) => f.removeEventListener('submit', h));
+}
+
 // Product card: the same everywhere. data-act attributes are handled globally in app.js.
 export function productCard(p) {
+  if (S.isPreview()) return previewCard(p);
   const wish = S.inWish(p.id);
   return `<article class="glass pcard">
     <a class="art" href="#p-${esc(p.id)}" aria-label="${esc(p.name)}">
@@ -88,6 +149,25 @@ export function productCard(p) {
       <div class="foot">
         ${priceTag(p)}
         <a class="btn btn-try btn-sm" href="#tryon-${esc(p.id)}" aria-label="Try on ${esc(p.name)}">${icon('camera')} Try on</a>
+      </div>
+    </div>
+  </article>`;
+}
+// Preview / voting mode card: category label, expected price, Try on + I want this.
+function previewCard(p) {
+  const lvl = arLevel(p.zone);
+  return `<article class="glass pcard pv-card">
+    <a class="art" href="#p-${esc(p.id)}" aria-label="${esc(p.name)}">
+      <span class="badge pv-cat">${icon(ZONE_ICON[p.zone] || 'sparkle')}${esc(catLabel(p.category))}</span>
+      ${productArt(p)}
+    </a>
+    <div class="meta">
+      <a class="name" href="#p-${esc(p.id)}">${esc(p.name)}</a>
+      <span class="sub pv-lvl">${icon('camera')}${esc(lvl.label)}</span>
+      <div class="pv-price"><span class="pv-exp">Expected price</span><span class="price">${money(p.price)}</span></div>
+      <div class="pv-acts">
+        <a class="btn btn-try btn-sm" href="#tryon-${esc(p.id)}" aria-label="Try on ${esc(p.name)}">${icon('camera')} Try on</a>
+        ${wantBtn(p)}
       </div>
     </div>
   </article>`;

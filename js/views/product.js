@@ -63,6 +63,14 @@ function completeTheLook(p) {
 }
 
 function sizeGuide(p) {
+  // Supplier's own size chart, when the product has one
+  if (p.sizeChart && Array.isArray(p.sizeChart.rows)) {
+    const c = p.sizeChart;
+    return `<div class="scroll"><table class="tbl"><thead><tr>${c.columns.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead>
+      <tbody>${c.rows.map(r => `<tr>${r.map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+      ${c.note ? `<p class="small muted" style="margin-top:10px">${esc(c.note)}</p>` : ''}
+      <p class="small dim">Size chart from our supplier.</p>`;
+  }
   const g = GUIDES[p.category];
   if (!g) return '<p class="muted">Sizing information for this item is on its way.</p>';
   const sizes = (p.sizes && p.sizes.length ? p.sizes : ['One size']);
@@ -80,6 +88,7 @@ function sizeGuide(p) {
 }
 
 function reviewsPanel(p) {
+  if (S.isPreview()) return `<div class="pd-empty-rev"><span class="pd-tip-ico">${icon('star')}</span><div><h3>No reviews yet</h3><p class="muted" style="margin:0">Nobody owns one yet — we’re still testing which products to stock. Reviews open when the store launches. Until then, try it on with your camera and tell us if you want it.</p></div></div>`;
   const n = Math.max(0, Number(p.reviews) || 0);
   const r = Math.max(0, Math.min(5, Number(p.rating) || 0));
   if (!n || !r) return `<div class="pd-empty-rev"><span class="pd-tip-ico">${icon('star')}</span><div><h3>No reviews yet</h3><p class="muted" style="margin:0">This one is new to the store. Ratings and written reviews appear here after customers buy — try it on with your camera in the meantime.</p></div></div>`;
@@ -114,6 +123,50 @@ function tipsPanel(p) {
     </ul>
     <a class="btn btn-try" href="#tryon-${esc(p.id)}">${icon('camera')} Start the try-on</a>
   </div>`;
+}
+
+// ---------------- preview / voting pieces ----------------
+const PV_LINE = 'We’re testing before we stock. Try them on and vote — the most-wanted products are the ones we’ll bring to the store.';
+const people = n => `${n.toLocaleString('en-US')} ${n === 1 ? 'person wants' : 'people want'} this`;
+function wantLabel(p) {
+  const n = S.wantCount(p.id), on = S.wantsIt(p.id);
+  return on ? `${icon('check')}<span>You want this${n ? ` · ${n.toLocaleString('en-US')}` : ''}</span>` : `${icon('heart')}<span>I want this in the store</span>`;
+}
+function wantCountText(p) {
+  const n = S.wantCount(p.id);
+  return n ? people(n) : 'No votes yet — be the first to vote';
+}
+function priceBlock(p) {
+  const mine = S.myPrice(p.id), st = S.priceStats(p.id);
+  return `<div class="pv-pay" id="pv-pay">
+    <div class="opt-label" style="margin-bottom:6px"><span id="pv-pay-lbl"><b>What would you pay?</b></span>${mine != null ? `<span class="small" style="color:var(--violet-hi)">${icon('check')} Answer saved</span>` : ''}</div>
+    <p class="small muted" style="margin:0 0 10px">Pick the price you’d honestly pay for this. You can change it any time.</p>
+    <div class="pv-chips" role="group" aria-labelledby="pv-pay-lbl">
+      ${S.priceChoices(p).map(v => `<button type="button" class="chip ${mine === v ? 'on' : ''}" data-pv-price="${v}" aria-pressed="${mine === v}">${money(v)}</button>`).join('')}
+    </div>
+    <p class="small dim" style="margin:10px 0 0">${st && st.n > 0 ? `Average answer so far: <b style="color:var(--text)">${money(st.avg)}</b> from ${st.n.toLocaleString('en-US')} ${st.n === 1 ? 'person' : 'people'}` : 'No price answers yet.'}</p>
+  </div>`;
+}
+function previewActions(p, lvl) {
+  const on = S.wantsIt(p.id);
+  return `<div class="actions" id="pd-actions">
+    <a class="btn btn-try btn-lg btn-block" href="#tryon-${esc(p.id)}">${icon('camera')} Try it on with your camera</a>
+    <div class="try-note">${icon('lock')} ${esc(lvl.label)} · camera stays on your device</div>
+    <button type="button" class="btn btn-lg btn-block pv-want ${on ? 'on' : ''}" data-pv-want aria-pressed="${on}">${wantLabel(p)}</button>
+    <div class="pv-count" data-pv-count aria-live="polite">${esc(wantCountText(p))}</div>
+  </div>
+  <div class="glass pad pv-card">${priceBlock(p)}</div>
+  <p class="note pv-line" style="margin:0">${icon('sparkle')}<span>${esc(PV_LINE)} <a href="#vote">See all six</a></span></p>`;
+}
+function notInTest(p) {
+  const alt = S.product(S.lineupFor(p.category));
+  return `<section class="wrap band"><div class="glass pad empty">${icon('sparkle')}
+    <h2>${esc(p.name)} isn’t in the test right now</h2>
+    <p class="muted" style="max-width:52ch;margin-left:auto;margin-right:auto">${esc(PV_LINE)}</p>
+    <div class="row" style="justify-content:center">
+      ${alt ? `<a class="btn btn-try" href="#p-${esc(alt.id)}">${icon('camera')} See the ${esc(catLabel(p.category).toLowerCase())} we’re testing</a>` : ''}
+      <a class="btn" href="#vote">${icon('chart')} Vote on all six</a>
+    </div></div></section>`;
 }
 
 function stockInfo(p) {
@@ -236,6 +289,24 @@ const STYLE = `<style>
 .v-product .pd-new .ico{width:15px;height:15px;color:var(--violet-hi)}
 .v-product .look{margin-top:clamp(40px,6vw,80px)}
 .v-product .mbar{display:none}
+.v-product .pv-price .eyebrow{margin-bottom:2px}
+.v-product .pv-price .small{margin:4px 0 0}
+.v-product .sizes-info{display:flex;gap:8px;flex-wrap:wrap}
+.v-product .sizes-info span{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font:600 14px var(--f-body);color:var(--text)}
+.v-product .pv-want{border:1px solid var(--line-2);background:#fff;color:var(--violet-lo)}
+.v-product .pv-want:hover{background:rgba(47,93,70,0.07)}
+.v-product .pv-want.on,.v-product .mbar .pv-want.on{background:var(--gloss-violet);color:#fff;border-color:rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 8px 22px rgba(47,93,70,0.25)}
+.v-product .pv-count{text-align:center;font-size:14px;color:var(--mist);margin-top:-4px}
+.v-product .pv-card{padding:18px 20px}
+.v-product .pv-chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.v-product .pv-chips .chip{justify-content:center;min-height:44px;font-size:14px;padding:0 8px;background:#fff}
+.v-product .pv-chips .chip.on{background:var(--gloss-violet)}
+.v-product .pv-pay .ico{width:15px;height:15px;display:inline-block;vertical-align:-3px}
+.v-product .pv-line{display:flex;gap:10px;align-items:flex-start}
+.v-product .pv-line .ico{color:var(--violet-hi);margin-top:1px}
+.v-product .pv-line a{color:var(--violet-hi);font-weight:600;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+@media(min-width:1100px){.v-product .look .products.five{grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}}
+@media(max-width:420px){.v-product .pv-chips{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:900px){
   .v-product .pd{grid-template-columns:1fr}
   .v-product .pd-left{position:relative;top:0}
@@ -274,6 +345,8 @@ export default {
         <h2>We can’t find that product</h2><p class="muted">It may have sold out or been taken down. There’s plenty more to try on.</p>
         <a class="btn btn-try" href="#shop">${icon('grid')} Browse the shop</a></div></section></div>`;
     }
+    const pv = S.isPreview();
+    if (pv && !S.products().some(x => x.id === p.id)) return `<div class="v-product">${STYLE}${notInTest(p)}</div>`;
     const c0 = p.colors?.[0];
     const sizes = p.sizes || [];
     const size0 = sizes.length === 1 ? sizes[0] : '';
@@ -281,17 +354,17 @@ export default {
     const lvl = arLevel(p.zone);
     const freeShip = p.price >= S.FREE_SHIPPING;
     const save = p.compareAt && p.compareAt > p.price ? p.compareAt - p.price : 0;
-    const look = completeTheLook(p);
+    const look = pv ? S.products().filter(x => x.id !== p.id) : completeTheLook(p);
     const wish = S.inWish(p.id);
     const dis = st.ok ? '' : 'disabled';
-    const hasReviews = Number(p.reviews) > 0 && Number(p.rating) > 0;
+    const hasReviews = !pv && Number(p.reviews) > 0 && Number(p.rating) > 0;
     const szCh = Math.max(0, ...sizes.map(s => String(s).length));
     const dataAttrs = `data-id="${esc(p.id)}" data-color="${esc(c0?.name || '')}" data-size="${esc(size0)}"`;
 
     return `<div class="v-product">${STYLE}
     <div class="wrap">
       <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <a href="#shop">Shop</a><span aria-hidden="true">›</span>
+        <a href="#shop">${pv ? 'The test line-up' : 'Shop'}</a><span aria-hidden="true">›</span>
         <a href="#shop-${esc(p.category)}">${esc(catLabel(p.category))}</a><span aria-hidden="true">›</span>
         <span aria-current="page" style="color:var(--mist)">${esc(p.name)}</span>
       </nav>
@@ -315,7 +388,7 @@ export default {
 
         <div class="pd-right">
           <div class="pd-top">
-            <div class="row">${p.badge ? `<span class="badge">${esc(p.badge)}</span>` : ''}<span class="badge badge-ar">${esc(zoneLabel(p.zone))} try-on</span></div>
+            <div class="row">${pv ? `<span class="badge">In the test</span>` : p.badge ? `<span class="badge">${esc(p.badge)}</span>` : ''}<span class="badge badge-ar">${esc(zoneLabel(p.zone))} try-on</span></div>
             <h1>${esc(p.name)}</h1>
             <div class="pd-sub">
               <a href="#shop-${esc(p.category)}">${esc(catLabel(p.category))}</a>
@@ -324,10 +397,14 @@ export default {
             </div>
           </div>
 
-          <div>
+          ${pv ? `<div class="pv-price">
+            <span class="eyebrow">Expected price</span>
+            <div class="pd-price"><span class="price price-lg">${money(p.price)}</span></div>
+            <p class="small dim">We may change it after the vote — tell us what you’d pay below.</p>
+          </div>` : `<div>
             <div class="pd-price">${priceTag(p, true)}</div>
             ${save ? `<div class="save">You save ${money(save)} (${Math.round((save / p.compareAt) * 100)}% off)</div>` : ''}
-          </div>
+          </div>`}
 
           ${p.colors?.length ? `<div>
             <div class="opt-label"><span>Colour: <b id="pd-color-name">${esc(c0.name)}</b></span></div>
@@ -336,7 +413,11 @@ export default {
             </div>
           </div>` : ''}
 
-          ${sizes.length ? `<div id="pd-size-block">
+          ${pv && sizes.length ? `<div>
+            <div class="opt-label"><span>Available sizes</span>${GUIDES[p.category] ? `<button type="button" class="link-btn" data-goto-tab="size">Size guide</button>` : ''}</div>
+            <div class="sizes-info">${sizes.map(s => `<span>${esc(s)}</span>`).join('')}</div>
+          </div>` : ''}
+          ${!pv && sizes.length ? `<div id="pd-size-block">
             <div class="opt-label"><span id="pd-size-lbl">Size${size0 ? `: <b>${esc(size0)}</b>` : ''}</span>${GUIDES[p.category] ? `<button type="button" class="link-btn" data-goto-tab="size">Size guide</button>` : ''}</div>
             <div class="sizes" role="group" aria-labelledby="pd-size-lbl" style="--szch:${szCh}">
               ${sizes.map(s => `<button type="button" class="chip ${s === size0 ? 'on' : ''}" data-size-pick="${esc(s)}" aria-pressed="${s === size0}">${esc(s)}</button>`).join('')}
@@ -344,7 +425,7 @@ export default {
             <div class="err size-err" id="pd-size-err" role="alert" hidden>Please choose a size first.</div>
           </div>` : ''}
 
-          <div>
+${pv ? previewActions(p, lvl) : `          <div>
             <div class="opt-label"><span id="pd-qty-lbl">Quantity</span></div>
             <div class="stepper" role="group" aria-labelledby="pd-qty-lbl">
               <button type="button" data-q="-1" aria-label="Decrease quantity" disabled>${icon('minus')}</button>
@@ -369,6 +450,7 @@ export default {
             <div class="fact">${icon('cash')}<span><b>Cash on delivery</b> — pay when it arrives at your door.</span></div>
             <div class="fact">${icon('refresh')}<span><b>Returns &amp; exchanges</b> — how it works is in our <a href="#returns">returns policy</a>.</span></div>
           </div>
+`}
         </div>
       </div>
 
@@ -383,7 +465,7 @@ export default {
         <div role="tabpanel" id="panel-details" aria-labelledby="tab-details">
           <p class="muted" style="font-size:17px;max-width:64ch">${esc(p.desc || '')}</p>
           ${(p.features || []).length ? `<ul class="pd-feat">${p.features.map(f => `<li>${icon('check')}<span>${esc(f)}</span></li>`).join('')}</ul>` : ''}
-          <p class="small dim" style="margin-top:16px">Available in ${p.colors?.length || 1} colour${(p.colors?.length || 1) === 1 ? '' : 's'}${sizes.length ? ` · sizes ${esc(sizes.join(', '))}` : ''}. Product names and prices are sample data.</p>
+          <p class="small dim" style="margin-top:16px">Available in ${p.colors?.length || 1} colour${(p.colors?.length || 1) === 1 ? '' : 's'}${sizes.length ? ` · sizes ${esc(sizes.join(', '))}` : ''}. ${pv ? 'The expected price may change after the vote.' : 'Product names and prices are sample data.'}</p>
         </div>
         <div role="tabpanel" id="panel-size" aria-labelledby="tab-size" hidden>${sizeGuide(p)}</div>
         <div role="tabpanel" id="panel-tips" aria-labelledby="tab-tips" hidden>${tipsPanel(p)}</div>
@@ -392,22 +474,28 @@ export default {
       </section>
 
       ${look.length ? `<section class="look">
-        <div class="sec-head"><div><span class="eyebrow">Complete the look</span><h2 style="margin:0">Wear it with</h2></div><p>Try each one on and see the whole outfit come together.</p></div>
-        <div class="products">${look.map(productCard).join('')}</div>
+        ${pv ? `<div class="sec-head"><div><span class="eyebrow">Also in the test</span><h2 style="margin:0">The other ${look.length} we’re testing</h2></div><p>One product per category. Try each one on and vote for the ones you want.</p></div>`
+          : `<div class="sec-head"><div><span class="eyebrow">Complete the look</span><h2 style="margin:0">Wear it with</h2></div><p>Try each one on and see the whole outfit come together.</p></div>`}
+        <div class="products ${look.length === 5 ? 'five' : ''}">${look.map(productCard).join('')}</div>
       </section>` : ''}
     </div>
 
-    <div class="mbar" id="pd-mbar" aria-label="Quick buy">
+    ${pv ? `<div class="mbar" id="pd-mbar" aria-label="Quick actions">
+      <div class="mb-p"><div class="mb-n">${esc(p.name)}</div><span class="small dim">Expected</span> <span class="price">${money(p.price)}</span></div>
+      <a class="btn btn-try" href="#tryon-${esc(p.id)}" aria-label="Try on ${esc(p.name)}">${icon('camera')}<span>Try on</span></a>
+      <button type="button" class="btn pv-want ${S.wantsIt(p.id) ? 'on' : ''}" data-pv-want data-short aria-pressed="${S.wantsIt(p.id)}">${S.wantsIt(p.id) ? `${icon('check')}<span>Wanted</span>` : `${icon('heart')}<span>I want this</span>`}</button>
+    </div>` : `<div class="mbar" id="pd-mbar" aria-label="Quick buy">
       <div class="mb-p"><div class="mb-n">${esc(p.name)}</div><span class="price">${money(p.price)}</span></div>
       <a class="btn btn-try" href="#tryon-${esc(p.id)}" aria-label="Try on ${esc(p.name)}">${icon('camera')}<span>Try on</span></a>
       <button type="button" class="btn btn-buy" data-act="buy" data-sync ${dataAttrs} ${dis}>${st.ok ? 'Buy now' : 'Sold out'}</button>
-    </div>
+    </div>`}
     </div>`;
   },
 
   mount(root, id) {
     const p = S.product(id);
     if (!p || p.hidden) return;
+    if (S.isPreview() && !S.products().some(x => x.id === p.id)) return;
     S.track('view', p.id);
     const st = stockInfo(p);
     const maxQty = Math.max(1, Math.min(10, Number.isFinite(Number(p.stock)) ? Number(p.stock) : 10));
@@ -459,7 +547,21 @@ export default {
       if (scroll) $('#pd-tabs').scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'start' });
     }
 
+    // preview votes
+    function paintVotes() {
+      const on = S.wantsIt(p.id);
+      root.querySelectorAll('[data-pv-want]').forEach(b => {
+        b.classList.toggle('on', on); b.setAttribute('aria-pressed', on);
+        b.innerHTML = b.hasAttribute('data-short') ? (on ? `${icon('check')}<span>Wanted</span>` : `${icon('heart')}<span>I want this</span>`) : wantLabel(p);
+      });
+      root.querySelectorAll('[data-pv-count]').forEach(c => { c.textContent = wantCountText(p); });
+      const pay = $('#pv-pay'); if (pay) pay.outerHTML = priceBlock(p);
+    }
     const onClick = e => {
+      const w = e.target.closest('[data-pv-want]');
+      if (w) { const on = S.toggleWant(p.id); toast(on ? 'Thanks! Your vote is in' : 'Vote removed', on ? 'heart' : 'x'); return; }
+      const pp = e.target.closest('[data-pv-price]');
+      if (pp) { const v = Number(pp.dataset.pvPrice); S.votePrice(p.id, v); toast(`Thanks — you’d pay ${money(v)}`, 'check'); return; }
       const cp = e.target.closest('[data-color-pick]'); if (cp) { setColor(cp.dataset.colorPick); return; }
       const sp = e.target.closest('[data-size-pick]'); if (sp) { setSize(sp.dataset.sizePick); return; }
       const q = e.target.closest('[data-q]'); if (q) { setQty(state.qty + Number(q.dataset.q)); return; }
@@ -528,7 +630,9 @@ export default {
       io.observe(actions); io.observe(priceEl); if (footer) io.observe(footer);
     } else bar.classList.add('show');
 
+    const offVotes = S.on(k => { if (k === 'votes' || k === 'myvotes') paintVotes(); });
     return () => {
+      offVotes();
       root.removeEventListener('click', onClick);
       tablist.removeEventListener('keydown', onTabKey);
       stage.removeEventListener('pointermove', onMove);

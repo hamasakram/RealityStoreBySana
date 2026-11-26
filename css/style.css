@@ -255,3 +255,67 @@ details.faq p{color:var(--mist)}
   .hdr-tools .icon-btn,.menu-btn{width:38px;height:38px}
 }
 @media(max-width:360px){.hdr-tools a[href="#wishlist"]{display:none}}
+
+/* ================= PREVIEW / VOTING MODE ================= */
+/* Nothing is for sale: hide the bag, wishlist and cart drawer while body.preview is on. */
+body.preview [data-act="open-cart"],body.preview .hdr-tools a[href="#wishlist"],
+body.preview #cart-drawer,body.preview #cart-scrim,body.preview .pcard .wish{display:none!important}
+/* header: Try-On Studio is the main action, results link sits next to it */
+.nav a.nav-try{display:inline-flex;align-items:center;gap:7px;color:#fff;background:var(--gloss-violet);border:1px solid rgba(255,255,255,.35);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.5),0 6px 16px rgba(47,93,70,.24);padding:9px 15px}
+.nav a.nav-try:hover,.nav a.nav-try.on{color:#fff;background:var(--gloss-violet);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 8px 22px rgba(47,93,70,.34)}
+.nav a.nav-try .ico{width:17px;height:17px}
+.nav a.nav-vote{display:inline-flex;align-items:center;gap:6px;color:var(--violet-lo)}
+.nav a.nav-vote .ico{width:17px;height:17px}
+.nav .nav-sep{width:1px;align-self:stretch;margin:8px 4px;background:var(--line-2)}
+@media(max-width:1180px) and (min-width:961px){.nav a.nav-zone{display:none}}
+@media(max-width:960px){
+  .nav .nav-sep{display:none}
+  .nav a.nav-try{justify-content:center;margin-top:8px}
+}
+.hdr-try{display:none}
+@media(max-width:960px){
+  .hdr-try{display:inline-flex;min-height:38px;padding:0 13px;font-size:13px}
+  .hdr-try .ico{width:16px;height:16px}
+}
+@media(max-width:400px){.hdr-try span{display:none}.hdr-try{width:38px;padding:0}}
+
+/* "I want this" vote button: outline forest, fills when voted */
+.want-btn{color:var(--violet);border-color:rgba(47,93,70,.42);background:rgba(255,255,255,.9);gap:6px}
+.want-btn .ico{width:16px;height:16px}
+.want-btn:hover{background:rgba(47,93,70,.08)}
+.want-btn.on{color:#fff;background:var(--gloss-violet);border-color:rgba(255,255,255,.35);box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 6px 16px rgba(47,93,70,.22)}
+.want-btn.on:hover{background:var(--gloss-violet)}
+.want-btn .wn{min-width:22px;height:22px;padding:0 7px;border-radius:999px;display:inline-grid;place-items:center;font:700 12px var(--f-body);
+  background:rgba(47,93,70,.12);color:var(--violet-lo)}
+.want-btn.on .wn{background:rgba(255,255,255,.22);color:#fff}
+
+/* preview product card */
+.pv-card .art .pv-cat{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);border-color:var(--line-2);color:var(--violet-lo);padding:4px 10px 4px 8px}
+.pv-card .art .pv-cat .ico{width:14px;height:14px}
+.pv-card .pv-lvl{display:inline-flex;align-items:center;gap:5px}
+.pv-card .pv-lvl .ico{width:14px;height:14px;color:var(--violet-hi)}
+.pv-card .pv-price{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:auto;padding-top:6px;flex-wrap:wrap}
+.pv-card .pv-exp{font:600 12px var(--f-body);color:var(--dim);text-transform:uppercase;letter-spacing:.05em}
+.pv-card .pv-acts{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-top:10px}
+.pv-card .pv-acts .btn{padding:0 10px;width:100%}
+@media(max-width:560px){
+  .pv-card .pv-acts{grid-template-columns:minmax(0,1fr)}
+  .pv-card .pv-price{flex-direction:column;align-items:flex-start;gap:0}
+  .pv-card .art .pv-cat{top:7px;left:7px;font-size:10.5px;padding:3px 8px 3px 6px}
+}
+
+/* launch-notify email form (shared) */
+.launch-form{max-width:520px}
+.launch-form .lf-row{display:flex;gap:10px}
+.launch-form .lf-row .input{flex:1}
+.launch-form .lf-msg{margin:8px 0 0;min-height:1.4em;color:var(--mist);display:flex;align-items:center;gap:6px}
+.launch-form .lf-msg.ok{color:var(--violet)}
+.launch-form .lf-msg.bad{color:var(--danger)}
+.launch-form .lf-msg .ico{width:16px;height:16px}
+@media(max-width:480px){.launch-form .lf-row{flex-direction:column}.launch-form .lf-row .btn{width:100%}}
+
+/* honest % bars (shared by home + results) */
+.bar{position:relative;height:10px;border-radius:999px;background:rgba(47,93,70,.1);overflow:hidden}
+.bar>i{position:absolute;left:0;top:0;bottom:0;border-radius:inherit;background:var(--gloss-violet);transition:width .4s ease}
+.foot-news h4{margin:0 0 4px}

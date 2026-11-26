@@ -132,6 +132,10 @@ export class TryOnEngine {
       this.gl.style.display = '';
     } else {
       this.gl.style.display = 'none';
+      // material photo for 2D try-ons (gloves, socks, jackets)
+      this.tex = null;
+      const src = product.arTex && (product.arTex.knit || product.arTex.fabric);
+      if (src) { const img = new Image(); img.onload = () => { if (this.product === product) this.tex = { img }; }; img.src = src; }
     }
     this.ctx.clearRect(0, 0, this.fx.width, this.fx.height);
     this.smoothers.forEach(s => s.reset());
@@ -180,15 +184,15 @@ export class TryOnEngine {
     if (this.kind === 'hands') {
       const hands = res.landmarks || [];
       hands.forEach((lms, i) => drawGlove(ctx, this.smoothers[i % 2].run(lms.map(p => ({ x: p.x, y: p.y })))
-        .map(p => ({ x: p.x, y: p.y })), w, h, product.model, color, fit));
+        .map(p => ({ x: p.x, y: p.y })), w, h, product.model, color, fit, this.tex));
       return hands.length > 0;
     }
     const pose = res.landmarks && res.landmarks[0];
     if (!pose) { this.smoothers[0].reset(); return false; }
     const sm = this.smoothers[0].run(pose.map(p => ({ x: p.x, y: p.y, vis: p.visibility ?? 1 }))).map(p => ({ x: p.x, y: p.y, visibility: p.vis }));
     return this.kind === 'pose' && product.zone === 'body'
-      ? drawJacket(ctx, sm, w, h, product.model, color, fit)
-      : drawFeet(ctx, sm, w, h, product, color, fit);
+      ? drawJacket(ctx, sm, w, h, product.model, color, fit, this.tex)
+      : drawFeet(ctx, sm, w, h, product, color, fit, this.tex);
   }
 
   // Average colour of the picture around the forehead -> virtual light colour & brightness.

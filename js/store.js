@@ -1,6 +1,6 @@
 // Store state: catalogue (base + admin edits), cart, wishlist, orders, account, saved looks, try-on analytics.
 // Persists to localStorage when available, falls back to memory (e.g. sandboxed previews).
-import { PRODUCTS } from './data.js';
+import { PRODUCTS, PREVIEW, CATEGORIES } from './data.js';
 
 const NS = 'mirra:';
 const mem = {};
@@ -32,9 +32,10 @@ export async function init() {
     const d = await call('products' + (adminKey() ? '?all=1' : ''), { timeout: 6000 });
     if (!Array.isArray(d.products)) throw new Error('bad');
     remote = d.products; api.ok = true;
-  } catch (e) { api.ok = false; return; }
+  } catch (e) { api.ok = false; loadVotes(); return; }
   flushPendingOrders();
   refreshMyOrders();
+  loadVotes();
   if (adminKey()) refreshAdmin();
 }
 export async function adminSignIn(key) {
@@ -74,7 +75,18 @@ export const FREE_SHIPPING = 5000;
 export const SHIPPING_FEE = 250;
 
 // ---------------- catalogue ----------------
-export function products({ includeHidden = false } = {}) {
+// In preview mode shoppers only see the test line-up (one per category). Admin passes { includeHidden: true } or { all: true }.
+function lineupFilter(list) {
+  const order = CATEGORIES.flatMap(c => [].concat(PREVIEW.lineup[c.id] || []));
+  return order.map(id => list.find(p => p.id === id)).filter(Boolean);
+}
+export function products(opts = {}) {
+  const list = allProducts(opts);
+  return PREVIEW.on && !opts.all && !opts.includeHidden ? lineupFilter(list) : list;
+}
+export const isPreview = () => PREVIEW.on;
+export function lineupFor(category) { const v = PREVIEW.lineup[category]; return Array.isArray(v) ? v[0] : (v || null); }
+function allProducts({ includeHidden = false } = {}) {
   if (remote) {
     const list = remote.map(p => ({ stock: 25, ...p, custom: !PRODUCTS.find(b => b.id === p.id) }));
     return includeHidden ? list : list.filter(p => !p.hidden);
@@ -85,7 +97,7 @@ export function products({ includeHidden = false } = {}) {
     .concat(custom.map(p => ({ stock: 25, ...p, custom: true })));
   return includeHidden ? list : list.filter(p => !p.hidden);
 }
-export function product(id) { return products({ includeHidden: true }).find(p => p.id === id) || null; }
+export function product(id) { return allProducts({ includeHidden: true }).find(p => p.id === id) || null; }
 export function saveProduct(p) {
   if (remote) {
     const i = remote.findIndex(x => x.id === p.id);
@@ -247,3 +259,56 @@ export function track(ev, id, n = 1) {
 
 // ---------------- UI state that should survive navigation ----------------
 export const session = { search: '' };
+
+
+// ---------------- PREVIEW VOTING ----------------
+// Anonymous voter id kept in this browser; votes are stored on the server (one per person per product).
+export function voterId() {
+  let v = load('voter', '');
+  if (!v) { const a = new Uint8Array(12); crypto.getRandomValues(a); v = Array.from(a, x => (x % 36).toString(36)).join('') + Date.now().toString(36); save('voter', v, true); }
+  return v;
+}
+const votes = { totals: { want: {}, category: {}, price: {}, people: 0 }, mine: { want: [], category: null, price: {} }, loaded: false };
+export async function loadVotes() {
+  if (!api.ok) { votes.mine = load('myvotes', votes.mine); votes.loaded = true; emit('votes'); return; }
+  try {
+    const d = await call('vote?voter=' + voterId());
+    votes.totals = d.totals; if (d.mine) votes.mine = d.mine; votes.loaded = true;
+    save('myvotes', votes.mine, true); emit('votes');
+  } catch (e) { /* offline: keep local */ }
+}
+export const voteTotals = () => votes.totals;
+export const myVotes = () => votes.mine;
+export const wantsIt = id => votes.mine.want.includes(id);
+export const wantCount = id => votes.totals.want[id] || 0;
+export const categoryVotes = () => votes.totals.category;
+export const myCategory = () => votes.mine.category;
+export const myPrice = id => votes.mine.price[id] ?? null;
+export const priceStats = id => votes.totals.price[id] || null;
+async function postVote(body) {
+  save('myvotes', votes.mine, true); emit('votes');
+  if (!api.ok) return;
+  try { const d = await call('vote', { method: 'POST', body: { voter: voterId(), ...body } }); votes.totals = d.totals; emit('votes'); }
+  catch (e) { errorHandler('Vote not saved: ' + e.message); }
+}
+export function toggleWant(id) {
+  const on = !wantsIt(id);
+  votes.mine.want = on ? [...votes.mine.want, id] : votes.mine.want.filter(x => x !== id);
+  votes.totals.want[id] = Math.max(0, (votes.totals.want[id] || 0) + (on ? 1 : -1));
+  postVote({ kind: 'want', target: id, on });
+  return on;
+}
+export function voteCategory(cat) {
+  const prev = votes.mine.category; if (prev === cat) return;
+  if (prev) votes.totals.category[prev] = Math.max(0, (votes.totals.category[prev] || 1) - 1);
+  votes.totals.category[cat] = (votes.totals.category[cat] || 0) + 1;
+  votes.mine.category = cat;
+  postVote({ kind: 'category', target: cat });
+}
+export function votePrice(id, value) { votes.mine.price = { ...votes.mine.price, [id]: value }; postVote({ kind: 'price', target: id, value }); }
+// Four "what would you pay?" choices around the expected price, rounded to Rs 50
+export function priceChoices(p) {
+  const r = x => Math.max(50, Math.round(p.price * x / 50) * 50);
+  return [...new Set([r(0.6), r(0.8), r(1), r(1.25)])];
+}
+export async function adminVoteDetail() { return call('vote?detail=1'); }

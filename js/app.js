@@ -9,10 +9,11 @@ const ROUTES = [
   { test: /^shop(?:-(.+))?$/, view: 'shop' },
   { test: /^p-(.+)$/, view: 'product' },
   { test: /^tryon(?:-(.+))?$/, view: 'tryon' },
+  { test: /^vote$/, view: 'vote' },
   { test: /^cart$/, view: 'cart' },
   { test: /^checkout$/, view: 'checkout' },
   { test: /^order-(.+)$/, view: 'order' },
-  { test: /^(account|wishlist|orders|looks)$/, view: 'account' },
+  { test: /^(account|wishlist|orders|looks|votes)$/, view: 'account' },
   { test: /^admin(?:-(.+))?$/, view: 'admin' },
   { test: /^(about|faq|contact|privacy|returns|terms|how-it-works)$/, view: 'info' },
 ];
@@ -30,6 +31,8 @@ async function route() {
   document.getElementById('nav').classList.remove('open');
   if (!r) return renderNotFound();
   const param = name.match(r.test)?.[1] ?? null;
+  // Preview mode: nothing is for sale yet, so buying pages send people to the voting page.
+  if (S.isPreview() && ['cart', 'checkout', 'order'].includes(r.view)) { location.replace('#vote'); return; }
   const viewName = r.view === 'admin' && S.api.ok && !S.isAdminSignedIn() ? 'adminlogin' : r.view;
   let mod;
   try { mod = (await import(`./views/${viewName}.js`)).default; }
@@ -94,6 +97,10 @@ document.addEventListener('click', e => {
     e.preventDefault(); openCart();
   } else if (act === 'close-cart') {
     closeCart();
+  } else if (act === 'want') {
+    e.preventDefault();
+    const on = S.toggleWant(t.dataset.id);
+    toast(on ? 'Thanks! Your vote is in' : 'Vote removed', on ? 'heart' : 'x');
   } else if (act === 'admin-signout') {
     S.adminSignOut(); toast('Signed out', 'lock'); go('#home');
   }
@@ -119,13 +126,14 @@ document.getElementById('news-form').addEventListener('submit', e => {
   e.preventDefault();
   const v = e.target.email.value.trim();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) { toast('Please enter a valid email', 'mail'); return; }
-  const done = () => { e.target.reset(); toast("You're on the list — new drops come to you first", 'mail'); };
+  const done = () => { e.target.reset(); toast("You're on the list — we'll tell you when RealityStore launches", 'mail'); };
   if (S.api.ok) S.sendMessage('newsletter', { email: v }).then(done).catch(err => toast(err.message, 'mail'));
   else done();
 });
 document.getElementById('year').textContent = new Date().getFullYear();
 
 S.onError(msg => toast(msg, 'refresh'));
+document.body.classList.toggle('preview', S.isPreview());
 window.addEventListener('hashchange', route);
 refreshCounts();
 S.init().finally(() => { refreshCounts(); route(); });

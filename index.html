@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RealityStore — Try it on before you buy it</title>
-<meta name="description" content="RealityStore is an online store where you can try on hats, sunglasses, jackets, gloves, shoes and socks live through your camera before you buy.">
+<title>RealityStore — Try it on and vote before we stock it</title>
+<meta name="description" content="RealityStore is testing before it stocks: try on a hat, sunglasses, a jacket, gloves, shoes and socks live through your camera, then vote for what you want us to sell.">
 <meta name="theme-color" content="#FBF8F3">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234A8A68'/%3E%3Cstop offset='1' stop-color='%23234635'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='white'%3ER%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,15 +21,18 @@
       <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="nav"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <a class="logo" href="#home" aria-label="RealityStore home"><span class="logo-mark">R</span><span>Reality<b>Store</b></span></a>
       <nav class="nav" id="nav" aria-label="Main">
-        <a href="#shop">Shop all</a>
-        <a href="#shop-head">Head</a>
-        <a href="#shop-face">Face</a>
-        <a href="#shop-hands">Hands</a>
-        <a href="#shop-body">Body</a>
-        <a href="#shop-feet">Feet</a>
-        <a href="#tryon">Try-On Studio</a>
+        <a href="#shop">Try &amp; vote</a>
+        <a class="nav-zone" href="#shop-head">Head</a>
+        <a class="nav-zone" href="#shop-face">Face</a>
+        <a class="nav-zone" href="#shop-hands">Hands</a>
+        <a class="nav-zone" href="#shop-body">Body</a>
+        <a class="nav-zone" href="#shop-feet">Feet</a>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <a class="nav-vote" href="#vote"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Vote &amp; results</a>
+        <a class="nav-try" href="#tryon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></svg>Try-On Studio</a>
       </nav>
       <div class="hdr-tools">
+        <a class="btn btn-try hdr-try" href="#tryon" aria-label="Open the Try-On Studio"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></svg><span>Try on</span></a>
         <button class="icon-btn" id="search-btn" aria-label="Search"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
         <a class="icon-btn" href="#wishlist" aria-label="Wishlist"><svg class="ico" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="count" id="wish-count"></span></a>
         <a class="icon-btn" href="#account" aria-label="Account"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></a>
@@ -39,7 +42,7 @@
     <div class="search-bar" id="search-bar">
       <form id="search-form" role="search" class="row" style="flex-wrap:nowrap">
         <label class="sr-only" for="q">Search products</label>
-        <input class="input" id="q" name="q" type="search" placeholder="Search hats, aviators, gloves, runners…" autocomplete="off">
+        <input class="input" id="q" name="q" type="search" placeholder="Search the line-up: beanie, aviator, gloves…" autocomplete="off">
         <button class="btn btn-try" type="submit">Search</button>
       </form>
     </div>
@@ -51,20 +54,22 @@
 <footer class="site-footer">
   <div class="wrap">
     <div class="foot-grid">
-      <div>
+      <div class="foot-news">
         <a class="logo" href="#home"><span class="logo-mark">R</span><span>Reality<b>Store</b></span></a>
-        <p class="muted" style="margin:14px 0 16px;max-width:36ch">Try it on before you buy it. Live camera try-on for every product, right in your browser.</p>
+        <p class="muted" style="margin:14px 0 16px;max-width:40ch">We’re testing before we stock. Try the line-up on with your camera and vote — the most-wanted pieces are the ones we’ll bring to the store.</p>
+        <h4>Tell me when RealityStore launches</h4>
+        <p class="small dim" style="margin:0 0 10px">One email when the store opens. Nothing else.</p>
         <form id="news-form" class="row" style="flex-wrap:nowrap;max-width:380px">
           <label class="sr-only" for="news-email">Email</label>
-          <input class="input" id="news-email" name="email" type="email" placeholder="Email for new drops">
-          <button class="btn btn-try" type="submit">Join</button>
+          <input class="input" id="news-email" name="email" type="email" autocomplete="email" placeholder="you@example.com">
+          <button class="btn btn-try" type="submit">Notify me</button>
         </form>
       </div>
-      <div><h4>Shop</h4><a href="#shop-hats">Hats &amp; caps</a><a href="#shop-sunglasses">Sunglasses</a><a href="#shop-jackets">Jackets</a><a href="#shop-gloves">Gloves</a><a href="#shop-shoes">Shoes</a><a href="#shop-socks">Socks</a></div>
-      <div><h4>Help</h4><a href="#how-it-works">How try-on works</a><a href="#faq">FAQ</a><a href="#returns">Delivery &amp; returns</a><a href="#contact">Contact us</a></div>
-      <div><h4>RealityStore</h4><a href="#about">About</a><a href="#account">My account</a><a href="#privacy">Camera &amp; privacy</a><a href="#terms">Terms</a><a href="#admin">Store admin</a></div>
+      <div><h4>The test</h4><a href="#shop">Try &amp; vote</a><a href="#vote">Results</a><a href="#tryon">Try-On Studio</a><a href="#vote">What would you pay?</a></div>
+      <div><h4>Help</h4><a href="#how-it-works">How try-on works</a><a href="#faq">FAQ</a><a href="#contact">Contact</a><a href="#privacy">Camera &amp; privacy</a></div>
+      <div><h4>RealityStore</h4><a href="#about">About</a><a href="#terms">Terms</a><a href="#admin">Store admin</a></div>
     </div>
-    <div class="foot-base"><span>© <span id="year"></span> RealityStore. Prices in PKR.</span><span>Your camera feed never leaves your device.</span></div>
+    <div class="foot-base"><span>© <span id="year"></span> RealityStore. Expected prices in PKR — nothing is on sale yet.</span><span>Your camera feed never leaves your device.</span></div>
   </div>
 </footer>
 

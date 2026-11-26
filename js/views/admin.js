@@ -17,6 +17,7 @@ const TRACKER = { head: 'Face landmarks (478 points)', face: 'Face landmarks (47
 const STATUSES = ['Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
 const NAV = [
   { id: 'dashboard', label: 'Dashboard', ic: 'chart' },
+  { id: 'votes', label: 'Votes', ic: 'heart' },
   { id: 'products', label: 'Products', ic: 'grid' },
   { id: 'add', label: 'Add product', ic: 'plus' },
   { id: 'orders', label: 'Orders', ic: 'truck' },
@@ -26,6 +27,15 @@ const tplName = (cat, m) => (TEMPLATES[cat] || []).find(t => t[0] === m)?.[1] ||
 const fmtDate = iso => { try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return ''; } };
 const n0 = v => Number(v) || 0;
 let search = '';
+// Admin-only vote detail (price spreads, daily counts) — loaded on demand from /api/vote?detail=1
+const vd = { state: 'idle', data: null, err: '' };
+async function loadVoteDetail(force) {
+  if (vd.state === 'loading' || (vd.state === 'ok' && !force)) return;
+  vd.state = 'loading'; vd.err = '';
+  try { vd.data = await S.adminVoteDetail(); vd.state = 'ok'; }
+  catch (e) { vd.state = 'error'; vd.err = e.status === 401 ? 'Sign in as admin to see price spreads and daily votes.' : !S.api.ok ? 'Price spreads and daily votes come from the live database, which this offline preview can’t reach.' : (e.message || 'Could not load'); }
+}
+const pctOf = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
 
 const CSS = `<style>
 .v-admin .adm-band{padding-top:clamp(26px,4vw,44px);padding-bottom:10px}
@@ -134,6 +144,32 @@ const CSS = `<style>
 .v-admin .err-sum{color:var(--danger);font-size:14px;margin-right:auto}
 .v-admin .mini-order{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
 .v-admin .mini-order:last-child{border-bottom:0}
+.v-admin .vbars{display:grid;gap:10px}
+.v-admin .vb{display:grid;grid-template-columns:minmax(0,230px) minmax(0,1fr) 70px;gap:12px;align-items:center;font-size:14px}
+.v-admin .vb .lab{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v-admin .vb .bar{height:14px;border-radius:4px;background:rgba(47,93,70,.07);overflow:hidden}
+.v-admin .vb .bar i{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--violet);min-width:2px}
+.v-admin .vb .val{text-align:right;font:700 15px var(--f-display);color:var(--text)}
+.v-admin .vb .val small{display:block;font:500 12px var(--f-body);color:var(--mist)}
+.v-admin .vb.me .lab::after{content:" · lead";color:var(--violet-hi);font-weight:600}
+.v-admin .days{display:flex;align-items:flex-end;gap:3px;height:140px;padding-top:8px;border-bottom:1px solid var(--line)}
+.v-admin .days span{flex:1 1 0;min-width:4px;border-radius:4px 4px 0 0;background:var(--violet);position:relative}
+.v-admin .days span:hover{background:var(--violet-hi)}
+.v-admin .days-ax{display:flex;justify-content:space-between;font-size:12px;color:var(--dim);margin-top:6px}
+.v-admin .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.v-admin .pcardv{padding:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.7)}
+.v-admin .pcardv .hd{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.v-admin .pcardv .th{width:44px;height:44px}
+.v-admin .pcardv .vb{grid-template-columns:76px minmax(0,1fr) 34px;gap:8px;font-size:13px}
+.v-admin .pcardv .vb .lab{font-weight:500}
+.v-admin .pcardv .vb.exp .lab{color:var(--violet-lo);font-weight:700}
+.v-admin .sug{padding:12px 0;border-top:1px solid var(--line)}
+.v-admin .sug:first-of-type{border-top:0}
+.v-admin .lineup{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:12px 0}
+.v-admin .lineup a{display:flex;gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.7)}
+.v-admin .lineup .th{width:40px;height:40px}
+.v-admin code.k{font-size:13px;padding:2px 6px;border-radius:6px;background:rgba(47,93,70,.08);color:var(--text)}
+@media(max-width:560px){.v-admin .vb{grid-template-columns:minmax(0,1fr) 64px;gap:4px 10px}.v-admin .vb .lab{grid-column:1/-1}.v-admin .pcardv .vb{grid-template-columns:76px minmax(0,1fr) 34px}.v-admin .pcardv .vb .lab{grid-column:auto}}
 @media(max-width:1100px){.v-admin .pf{grid-template-columns:minmax(0,1fr)}.v-admin .prev{position:relative;top:0}
   .v-admin .prev-wrap{order:-1}.v-admin .prev .inner{display:grid;grid-template-columns:160px minmax(0,1fr);gap:16px;align-items:start}.v-admin .prev .pname{margin-top:0}}
 @media(max-width:960px){
@@ -186,6 +222,7 @@ function totals() {
 }
 
 function dashboard() {
+  if (S.isPreview()) return previewDashboard();
   const all = S.products({ includeHidden: true });
   const live = all.filter(p => !p.hidden).length;
   const orders = S.orders();
@@ -553,6 +590,7 @@ function panel(r) {
   if (r.tab === 'products') return productsPanel();
   if (r.tab === 'orders') return ordersPanel();
   if (r.tab === 'messages') return messagesPanel();
+  if (r.tab === 'votes') return votesPanel();
   if (r.tab === 'add' || r.tab === 'edit') {
     const p = r.tab === 'edit' ? S.product(r.id) : null;
     if (r.tab === 'edit' && !p) return `<div class="glass pad empty">${icon('search')}<h3>Product not found</h3><p class="muted">It may have been deleted.</p><a class="btn" href="#admin-products">Back to products</a></div>`;
@@ -615,22 +653,34 @@ export default {
         m.el.querySelector('[data-close]').focus();
       }
     };
+    const repaint = () => { if (!root.isConnected) return; const y = window.scrollY; main.innerHTML = panel(r); window.scrollTo(0, y); };
+    const onVoteClick = e => {
+      if (e.target.closest('[data-adm-v="refresh"]')) {
+        S.loadVotes(); if (S.api.ok && S.isAdminSignedIn()) S.refreshAdmin();
+        loadVoteDetail(true).then(repaint); repaint();
+      }
+    };
+    main.addEventListener('click', onVoteClick);
+    if (r.tab === 'votes') { S.loadVotes(); loadVoteDetail(true).then(repaint); }
     main.addEventListener('input', onInput); main.addEventListener('change', onChange); main.addEventListener('click', onClick);
     const off = S.on(k => {
       if (r.tab === 'add' || r.tab === 'edit') return; // never clobber a form being filled in
-      if (['edits', 'custom', 'orders', 'messages'].includes(k)) {
+      if (['edits', 'custom', 'orders', 'messages', 'votes'].includes(k)) {
         const y = window.scrollY; main.innerHTML = panel(r); window.scrollTo(0, y);
       }
     });
-    return () => { off(); unbindForm(); main.removeEventListener('input', onInput); main.removeEventListener('change', onChange); main.removeEventListener('click', onClick); };
+    return () => { off(); unbindForm(); main.removeEventListener('click', onVoteClick); main.removeEventListener('input', onInput); main.removeEventListener('change', onChange); main.removeEventListener('click', onClick); };
   },
 };
 
 function messagesPanel() {
   const list = S.messages();
-  const contact = list.filter(m => m.kind === 'contact'), news = list.filter(m => m.kind === 'newsletter');
-  const when = d => new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const contact = list.filter(m => m.kind === 'contact'), news = list.filter(m => m.kind === 'newsletter'), sug = list.filter(m => m.kind === 'suggestion');
   return `<div class="glass pad" style="margin-bottom:16px">
+      <h2 style="font-size:22px">Stock suggestions <span class="dim" style="font-size:15px">(${sug.length})</span></h2>
+      ${suggestionList(sug)}
+    </div>
+    <div class="glass pad" style="margin-bottom:16px">
       <h2 style="font-size:22px">Contact messages <span class="dim" style="font-size:15px">(${contact.length})</span></h2>
       ${contact.length ? contact.map(m => `<div style="padding:14px 0;border-top:1px solid var(--line)">
           <div class="row between"><b>${esc(m.name)}</b><span class="small dim">${esc(when(m.created_at))}</span></div>
@@ -638,7 +688,168 @@ function messagesPanel() {
           <p style="margin:8px 0 0;white-space:pre-wrap">${esc(m.body)}</p></div>`).join('')
         : `<p class="muted" style="margin:0">No messages yet. Messages sent from the Contact page appear here.</p>`}
     </div>
-    <div class="glass pad"><h2 style="font-size:22px">Newsletter sign-ups <span class="dim" style="font-size:15px">(${news.length})</span></h2>
+    <div class="glass pad"><h2 style="font-size:22px">${S.isPreview() ? 'Launch sign-ups' : 'Newsletter sign-ups'} <span class="dim" style="font-size:15px">(${news.length})</span></h2>
       ${news.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>Email</th><th>Joined</th></tr></thead><tbody>${news.map(m => `<tr><td>${esc(m.email)}</td><td>${esc(when(m.created_at))}</td></tr>`).join('')}</tbody></table></div>`
         : `<p class="muted" style="margin:0">No sign-ups yet.</p>`}</div>`;
+}
+
+// ---------------- preview votes ----------------
+function voteRows() {
+  const t = S.voteTotals(), st = S.stats();
+  const lineup = S.products();
+  const ids = new Set([...lineup.map(p => p.id), ...Object.keys(t.want || {}).filter(id => n0(t.want[id]) > 0)]);
+  return [...ids].map(id => S.product(id)).filter(Boolean).map(p => {
+    const want = n0(t.want?.[p.id]), tryon = n0(st[p.id]?.tryon), view = n0(st[p.id]?.view), pr = t.price?.[p.id];
+    return { p, want, tryon, view, inTest: lineup.some(x => x.id === p.id), pn: n0(pr?.n), pavg: pr?.avg };
+  }).sort((a, b) => b.want - a.want || b.tryon - a.tryon);
+}
+function bars(items, { lab, val, sub, max, title }) {
+  const m = Math.max(1, max ?? Math.max(...items.map(val), 0));
+  return `<div class="vbars">${items.map((x, i) => `<div class="vb ${i === 0 && val(x) > 0 ? 'me' : ''}" title="${esc(title ? title(x) : lab(x) + ': ' + val(x))}">
+    <span class="lab">${esc(lab(x))}</span><span class="bar" role="img" aria-label="${esc(lab(x))}: ${val(x)}"><i style="width:${val(x) / m * 100}%"></i></span>
+    <span class="val">${val(x).toLocaleString('en-US')}${sub ? `<small>${sub(x)}</small>` : ''}</span></div>`).join('')}</div>`;
+}
+function wantTable(rows, limit) {
+  const list = limit ? rows.slice(0, limit) : rows;
+  if (!list.length) return `<p class="muted" style="margin:0">No products in the test.</p>`;
+  return `<div class="scroll"><table class="tbl"><thead><tr><th>#</th><th>Product</th><th class="num">Want votes</th><th class="num">Try-ons</th><th class="num">Want ÷ try-on</th><th class="num">Price answers</th><th class="num">Avg answer</th></tr></thead><tbody>
+    ${list.map((r, i) => `<tr><td class="dim">${i + 1}</td>
+      <td><div class="nm"><span class="th">${productArt(r.p)}</span><div><a href="#p-${esc(r.p.id)}">${esc(r.p.name)}</a><div class="small dim">${esc(catLabel(r.p.category))}${r.inTest ? '' : ' · not in the line-up'}</div></div></div></td>
+      <td class="num"><b>${r.want}</b></td><td class="num">${r.tryon}</td>
+      <td class="num">${pctOf(r.want, r.tryon)}</td><td class="num">${r.pn}</td>
+      <td class="num">${r.pn ? `${money(r.pavg)}<div class="small dim">expected ${money(n0(r.p.price))}</div>` : '—'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="small dim" style="margin:10px 0 0">Want ÷ try-on compares all-time want votes with try-on sessions${S.api.ok ? ' recorded by the server' : ' recorded in this browser'}; it can pass 100% when people vote without trying on.</p>`;
+}
+function catRanking() {
+  const cv = S.categoryVotes() || {};
+  const items = CATEGORIES.map(c => ({ c, n: n0(cv[c.id]) })).sort((a, b) => b.n - a.n);
+  const total = items.reduce((a, x) => a + x.n, 0);
+  if (!total) return `<p class="muted" style="margin:0">No category picks yet. Visitors pick on the vote page (“Which category should we launch first?”).</p>`;
+  return bars(items, { lab: x => x.c.label, val: x => x.n, sub: x => pctOf(x.n, total), title: x => `${x.c.label}: ${x.n} of ${total} picks` });
+}
+function suggestions() { return S.messages().filter(m => m.kind === 'suggestion'); }
+const when = d => { try { return new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; } };
+function suggestionList(list) {
+  if (!list.length) return `<p class="muted" style="margin:0">No suggestions yet. They come from “What else should we stock?” on the vote page${S.api.ok ? '' : ' and are stored in the live database'}.</p>`;
+  return list.map(m => `<div class="sug">
+    <div class="row between"><b>${esc(m.name || 'Anonymous')}${m.order_ref ? ` <span class="badge">${esc(catLabel(m.order_ref))}</span>` : ''}</b><span class="small dim">${esc(when(m.created_at))}</span></div>
+    ${m.email ? `<div class="small muted">${esc(m.email)}</div>` : ''}
+    <p style="margin:6px 0 0;white-space:pre-wrap">${esc(m.body)}</p></div>`).join('');
+}
+function priceSection(rows) {
+  if (vd.state === 'loading' || vd.state === 'idle') return `<p class="muted" style="margin:0" aria-live="polite">Loading price answers…</p>`;
+  const lineup = rows.filter(r => r.inTest || r.pn);
+  if (vd.state === 'error') {
+    const any = lineup.filter(r => r.pn);
+    return `<p class="note hint" style="margin:0 0 12px">${icon('lock')}<span>${esc(vd.err)}</span></p>
+      ${any.length ? `<div class="scroll"><table class="tbl"><thead><tr><th>Product</th><th class="num">Answers</th><th class="num">Average</th><th class="num">Expected</th></tr></thead><tbody>
+        ${any.map(r => `<tr><td>${esc(r.p.name)}</td><td class="num">${r.pn}</td><td class="num">${money(r.pavg)}</td><td class="num">${money(n0(r.p.price))}</td></tr>`).join('')}</tbody></table></div>` : ''}`;
+  }
+  const by = {};
+  (vd.data?.prices || []).forEach(x => { (by[x.target] = by[x.target] || []).push({ value: n0(x.value), n: n0(x.n) }); });
+  return `<div class="pgrid">${lineup.map(r => {
+    const p = r.p;
+    const answers = by[p.id] || [];
+    const total = answers.reduce((a, x) => a + x.n, 0);
+    const avg = total ? Math.round(answers.reduce((a, x) => a + x.value * x.n, 0) / total) : 0;
+    const choices = S.priceChoices(p);
+    const vals = [...new Set([...choices, ...answers.map(a => a.value)])].sort((a, b) => a - b);
+    const items = vals.map(v => ({ v, n: answers.find(a => a.value === v)?.n || 0 }));
+    return `<div class="pcardv">
+      <div class="hd"><span class="th">${productArt(p)}</span><div><b>${esc(p.name)}</b><div class="small dim">Expected ${money(n0(p.price))}</div></div></div>
+      ${total ? `${bars(items, { lab: x => money(x.v), val: x => x.n, max: Math.max(...items.map(x => x.n)), title: x => `${money(x.v)}: ${x.n} of ${total} answers` }).replace(/class="vb me"/g, 'class="vb"')}
+        <p class="small" style="margin:10px 0 0">Average <b>${money(avg)}</b> from ${total} ${total === 1 ? 'answer' : 'answers'} · ${avg >= n0(p.price) ? 'at or above' : `${pctOf(n0(p.price) - avg, n0(p.price))} below`} expected</p>`
+        : `<p class="small muted" style="margin:0">No price answers yet.</p>`}
+    </div>`;
+  }).join('')}</div>`;
+}
+function dailySection() {
+  if (vd.state !== 'ok') return vd.state === 'error' ? `<p class="muted small" style="margin:0">${esc(vd.err)}</p>` : `<p class="muted" style="margin:0">Loading…</p>`;
+  const days = [...(vd.data?.daily || [])].reverse();
+  if (!days.length) return `<p class="muted" style="margin:0">No votes yet.</p>`;
+  const m = Math.max(1, ...days.map(d => n0(d.n)));
+  const fmt = d => { try { return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); } catch (e) { return d; } };
+  return `<div class="days" role="img" aria-label="Votes per day for the last ${days.length} days">${days.map(d => `<span style="height:${Math.max(2, n0(d.n) / m * 100)}%" title="${esc(fmt(d.day))}: ${n0(d.n)} votes"></span>`).join('')}</div>
+    <div class="days-ax"><span>${esc(fmt(days[0].day))}</span><span>peak ${m}</span><span>${esc(fmt(days[days.length - 1].day))}</span></div>
+    <details style="margin-top:10px"><summary class="small muted" style="cursor:pointer">Show as table</summary><div class="scroll"><table class="tbl"><thead><tr><th>Day</th><th class="num">Votes</th></tr></thead><tbody>${[...days].reverse().map(d => `<tr><td>${esc(fmt(d.day))}</td><td class="num">${n0(d.n)}</td></tr>`).join('')}</tbody></table></div></details>
+    <p class="small dim" style="margin:8px 0 0">Counts votes still standing, by the day they were first cast (removed “want” votes drop out).</p>`;
+}
+function lineupNote() {
+  const lineup = S.products(), all = S.products({ includeHidden: true });
+  return `<section class="glass pad">
+    <h3>Line-up in the test</h3>
+    <p class="small muted" style="margin:0">Visitors see only these ${lineup.length} products, one per category. The other ${Math.max(0, all.length - lineup.length)} products stay in the catalogue (Products tab) but are hidden from visitors while the test runs.</p>
+    <div class="lineup">${lineup.map(p => `<a href="#p-${esc(p.id)}"><span class="th">${productArt(p)}</span><span><b style="font-size:14px">${esc(p.name)}</b><div class="small dim">${esc(catLabel(p.category))}</div></span></a>`).join('')}</div>
+    <p class="note hint" style="margin:0">${icon('edit')}<span>To swap a product in or out, the developer changes <code class="k">PREVIEW.lineup</code> in <code class="k">js/data.js</code>. Set <code class="k">PREVIEW.on</code> to <code class="k">false</code> to open the real shop.</span></p>
+  </section>`;
+}
+function voteKpis(rows) {
+  const t = S.voteTotals();
+  const wants = rows.reduce((a, r) => a + r.want, 0);
+  const prices = Object.values(t.price || {}).reduce((a, x) => a + n0(x?.n), 0);
+  return `<div class="kpis">
+    <div class="glass kpi"><span class="ic">${icon('user')}</span><b>${n0(t.people)}</b><span>People who voted</span></div>
+    <div class="glass kpi"><span class="ic">${icon('heart')}</span><b>${wants}</b><span>“I want this” votes</span></div>
+    <div class="glass kpi"><span class="ic">${icon('wallet')}</span><b>${prices}</b><span>Price answers</span></div>
+    <div class="glass kpi"><span class="ic">${icon('mail')}</span><b>${suggestions().length}</b><span>Suggestions</span></div>
+  </div>`;
+}
+function votesPanel() {
+  const rows = voteRows();
+  const lineupRows = rows.filter(r => r.inTest);
+  return `<div class="ph-row"><h2 class="ph">Votes</h2><button class="btn btn-sm" data-adm-v="refresh">${icon('refresh')} Refresh</button></div>
+  ${S.api.ok ? '' : `<p class="note hint" style="margin:0 0 16px">${icon('lock')}<span><b style="color:var(--text)">Offline preview.</b> Totals below only include votes made in this browser. On the live site they come from the database.</span></p>`}
+  ${voteKpis(rows)}
+  <section class="glass pad" style="margin-bottom:18px">
+    <h3>Most wanted</h3>
+    <p class="small muted" style="margin-bottom:14px">Products ranked by “I want this” votes. The top of this list is what to stock first.</p>
+    ${lineupRows.some(r => r.want) ? bars(lineupRows, { lab: r => r.p.name, val: r => r.want, sub: r => `${r.tryon} try-on${r.tryon === 1 ? '' : 's'}`, title: r => `${r.p.name}: ${r.want} want votes, ${r.tryon} try-ons` }) : `<p class="note hint" style="margin:0 0 6px">${icon('sparkle')}<span>No “I want this” votes yet. Share the store link and these bars fill in.</span></p>`}
+    <div style="margin-top:18px">${wantTable(rows)}</div>
+  </section>
+  <div class="dash2">
+    <section class="glass pad"><h3>Which category first?</h3><p class="small muted" style="margin-bottom:14px">One pick per visitor; they can change it.</p>${catRanking()}</section>
+    <section class="glass pad"><h3>Votes per day</h3><p class="small muted" style="margin-bottom:6px">Last 30 days, all vote types.</p>${dailySection()}</section>
+  </div>
+  <section class="glass pad" style="margin-bottom:18px">
+    <h3>What would you pay?</h3>
+    <p class="small muted" style="margin-bottom:14px">How many visitors picked each price, against the expected price.</p>
+    ${priceSection(rows)}
+  </section>
+  <section class="glass pad" style="margin-bottom:18px">
+    <div class="row between" style="margin-bottom:6px"><h3 style="margin:0">“What else should we stock?” <span class="dim" style="font-size:15px">(${suggestions().length})</span></h3><a class="btn btn-sm" href="#admin-messages">All messages ${icon('arrow')}</a></div>
+    ${suggestionList(suggestions())}
+  </section>
+  ${lineupNote()}`;
+}
+function previewDashboard() {
+  const rows = voteRows().filter(r => r.inTest);
+  const { t } = totals();
+  const wants = rows.reduce((a, r) => a + r.want, 0);
+  const max = Math.max(t.view, t.tryon, wants, 1);
+  const funnel = [['Product views', t.view, ''], ['Try-ons', t.tryon, pctOf(t.tryon, t.view) + ' of views'], ['Want votes', wants, pctOf(wants, t.tryon) + ' of try-ons']];
+  const empty = !t.view && !t.tryon && !wants;
+  const sug = suggestions();
+  return `<div class="ph-row"><h2 class="ph">Dashboard</h2><span class="small dim">Public test · nothing is for sale</span></div>
+  ${voteKpis(voteRows())}
+  <div class="dash2">
+    <section class="glass pad">
+      <div class="row between" style="margin-bottom:10px"><h3 style="margin:0">Most wanted</h3><a class="btn btn-sm" href="#admin-votes">All votes ${icon('arrow')}</a></div>
+      ${rows.some(r => r.want) ? bars(rows, { lab: r => r.p.name, val: r => r.want, sub: r => `${r.tryon} try-on${r.tryon === 1 ? '' : 's'}`, title: r => `${r.p.name}: ${r.want} want votes from ${r.tryon} try-ons` })
+        : `<p class="note hint" style="margin:0">${icon('sparkle')}<span>No “I want this” votes yet.</span></p>`}
+    </section>
+    <section class="glass pad">
+      <h3>Test funnel</h3>
+      <p class="small muted" style="margin-bottom:18px">From looking, to trying on, to saying “I want this” — line-up products and all visitors.</p>
+      <div class="funnel">${funnel.map(([l, v, sub]) => `<div class="fr"><span class="lab">${l}</span>
+        <span class="bar" role="img" aria-label="${l}: ${v}"><i style="width:${empty ? 0 : Math.max(1.5, v / max * 100)}%"></i></span>
+        <span class="val">${v}${sub && !empty ? `<span class="pct">${sub}</span>` : ''}</span></div>`).join('')}</div>
+      ${empty ? `<p class="note hint" style="margin:18px 0 0">${icon('sparkle')}<span>No activity yet. These bars fill in as visitors try products on and vote.</span></p>` : ''}
+    </section>
+  </div>
+  <div class="dash2">
+    <section class="glass pad"><h3>Which category first?</h3>${catRanking()}</section>
+    <section class="glass pad"><div class="row between" style="margin-bottom:6px"><h3 style="margin:0">Latest suggestions</h3><a class="btn btn-sm" href="#admin-votes">See all ${icon('arrow')}</a></div>${suggestionList(sug.slice(0, 4))}</section>
+  </div>
+  ${lineupNote()}`;
 }

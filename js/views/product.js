@@ -1,6 +1,6 @@
 // Product detail page (#p-<id>): stage with tilt, variants, sizes, qty, try-on + buy actions, tabs, complete the look.
 import * as S from '../store.js';
-import { esc, money, icon, productCard, priceTag, stars, productArt, toast, go, catLabel, zoneLabel, arLevel, openCart } from '../ui.js';
+import { esc, money, icon, productCard, priceTag, stars, productArt, toast, go, catLabel, zoneLabel, arLevel, openCart, shadeBtn } from '../ui.js';
 import { CATEGORIES } from '../data.js';
 
 const TRACKING = {
@@ -71,6 +71,7 @@ function sizeGuide(p) {
       ${c.note ? `<p class="small muted" style="margin-top:10px">${esc(c.note)}</p>` : ''}
       <p class="small dim">Size chart from our supplier.</p>`;
   }
+  if (p.category === 'nails') return '<p class="muted">Nail paint is one size — every bottle is the same. Use the colour swatches and the live try-on to pick your shade.</p>';
   const g = GUIDES[p.category];
   if (!g) return '<p class="muted">Sizing information for this item is on its way.</p>';
   const sizes = (p.sizes && p.sizes.length ? p.sizes : ['One size']);
@@ -156,7 +157,7 @@ function previewActions(p, lvl) {
     <div class="pv-count" data-pv-count aria-live="polite">${esc(wantCountText(p))}</div>
   </div>
   <div class="glass pad pv-card">${priceBlock(p)}</div>
-  <p class="note pv-line" style="margin:0">${icon('sparkle')}<span>${esc(PV_LINE)} <a href="#vote">See all six</a></span></p>`;
+  <p class="note pv-line" style="margin:0">${icon('sparkle')}<span>${esc(PV_LINE)} <a href="#vote">See the whole line-up</a></span></p>`;
 }
 function notInTest(p) {
   const alt = S.product(S.lineupFor(p.category));
@@ -165,7 +166,7 @@ function notInTest(p) {
     <p class="muted" style="max-width:52ch;margin-left:auto;margin-right:auto">${esc(PV_LINE)}</p>
     <div class="row" style="justify-content:center">
       ${alt ? `<a class="btn btn-try" href="#p-${esc(alt.id)}">${icon('camera')} See the ${esc(catLabel(p.category).toLowerCase())} we’re testing</a>` : ''}
-      <a class="btn" href="#vote">${icon('chart')} Vote on all six</a>
+      <a class="btn" href="#vote">${icon('chart')} Vote on the whole line-up</a>
     </div></div></section>`;
 }
 
@@ -225,6 +226,7 @@ const STYLE = `<style>
 .v-product .opt-label b{color:var(--text)}
 .v-product .link-btn{background:none;border:0;padding:6px 0;color:var(--violet-hi);font:600 14px var(--f-body);text-decoration:underline;text-underline-offset:3px;min-height:32px}
 .v-product .sw-row{display:flex;gap:14px;flex-wrap:wrap;padding:4px}
+.v-product .shade-vote{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:12px}
 .v-product .sw-lg{width:40px;height:40px;border-radius:50%;box-shadow:inset 0 2px 4px rgba(255,255,255,.35),inset 0 -4px 8px rgba(30,43,36,0.087)}
 .v-product .sizes{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,max(76px,calc(var(--szch,3) * 7.2px + 42px))),1fr));gap:8px}
 .v-product .sizes .chip{min-height:44px;min-width:0;padding:8px 12px;justify-content:center;text-align:center;font-size:15px;line-height:1.25;white-space:normal;background:#fff}
@@ -411,6 +413,7 @@ export default {
             <div class="sw-row" role="group" aria-label="Choose colour">
               ${p.colors.map((c, i) => `<button type="button" class="sw sw-lg ${i === 0 ? 'on' : ''}" style="background:${esc(c.hex)}" data-color-pick="${esc(c.name)}" aria-pressed="${i === 0}" aria-label="${esc(c.name)}" title="${esc(c.name)}"></button>`).join('')}
             </div>
+            ${pv && p.colors.length > 1 ? `<div class="shade-vote"><span id="pd-shade">${shadeBtn(p, c0.name)}</span><span class="small muted">Tap a shade, then vote for each one you’d actually buy.</span></div>` : ''}
           </div>` : ''}
 
           ${pv && sizes.length ? `<div>
@@ -511,6 +514,7 @@ ${pv ? previewActions(p, lvl) : `          <div>
       state.color = c.name;
       $('#pd-art').innerHTML = productArt(p, c.hex);
       const nm = $('#pd-color-name'); if (nm) nm.textContent = c.name;
+      const sv = $('#pd-shade'); if (sv) sv.innerHTML = shadeBtn(p, c.name);
       root.querySelectorAll('[data-color-pick]').forEach(b => {
         const on = b.dataset.colorPick === c.name;
         b.setAttribute('aria-pressed', on); b.classList.toggle('on', on && b.classList.contains('sw'));

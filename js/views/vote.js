@@ -1,7 +1,7 @@
 // Results & voting (#vote): most-wanted leaderboard, category race, "what would you pay?", suggestions, launch email.
 // Every number here comes from the store (S.voteTotals etc.) — nothing is invented. Re-renders live on S.on('votes').
 import * as S from '../store.js';
-import { esc, money, icon, productArt, catLabel, ZONE_ICON, wantBtn, pct, plural, launchForm, bindLaunchForm, toast } from '../ui.js';
+import { esc, money, icon, productArt, catLabel, ZONE_ICON, wantBtn, shadeBtn, pct, plural, launchForm, bindLaunchForm, toast } from '../ui.js';
 import { CATEGORIES } from '../data.js';
 
 const catOrder = id => CATEGORIES.findIndex(c => c.id === id);
@@ -138,6 +138,12 @@ const CSS = `<style>
 .v-vote .lede b{color:var(--text);font-weight:600}
 .v-vote .head .row{margin-top:18px}
 .v-vote section.sec{margin-top:clamp(30px,4vw,50px)}
+.v-vote .shade-card+.shade-card{margin-top:16px}
+.v-vote .shade-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.v-vote .shade-tile{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:16px;background:rgba(255,255,255,.55);border:1px solid rgba(47,93,70,.1)}
+.v-vote .shade-tile .sw-dot{width:34px;height:34px;border-radius:50%;flex:none;box-shadow:inset 0 2px 4px rgba(255,255,255,.4),inset 0 -4px 8px rgba(0,0,0,.18)}
+.v-vote .shade-meta{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.v-vote .shade-tile .shade-btn .wl b{display:none}
 .v-vote .stats{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .v-vote .stats li{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:18px}
 .v-vote .stats li>span:last-child{display:flex;flex-direction:column;line-height:1.25;font-size:13px;color:var(--mist)}
@@ -258,6 +264,24 @@ const CSS = `<style>
 }
 </style>`;
 
+
+// Products in the test that come in many shades (nail paint): vote shade by shade
+function shadesHTML() {
+  const ps = S.products().filter(p => p.colors?.length > 1);
+  if (!ps.length) return '';
+  return ps.map(p => {
+    const list = p.colors.map((c, i) => ({ c, i, n: S.shadeCount(p.id, c.name) })).sort((a, b) => b.n - a.n || a.i - b.i);
+    const tot = list.reduce((a, x) => a + x.n, 0);
+    return `<div class="glass pad shade-card"><div class="row" style="justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px">
+      <div><b>${esc(p.name)}</b><div class="small muted">${p.colors.length} shades · ${plural(tot, 'shade vote')}</div></div>
+      <a class="btn btn-sm btn-try" href="#tryon-${esc(p.id)}">${icon('camera')} Try the shades</a></div>
+      <div class="shade-grid">${list.map(({ c, n }, k) => `<div class="shade-tile">
+        <span class="sw-dot" style="background:${esc(c.hex)}"></span>
+        <div class="shade-meta"><b>${esc(c.name)}</b><span class="small dim">${n ? `${k === 0 ? 'Top shade · ' : ''}${pct(n, tot)}% of votes` : 'No votes yet'}</span></div>
+        ${shadeBtn(p, c.name)}</div>`).join('')}</div></div>`;
+  }).join('');
+}
+
 export default {
   title: 'Results & voting',
   render() {
@@ -278,6 +302,12 @@ export default {
             <p>Ranked by “I want this” votes. Percentages are each product’s share of all those votes.</p></div>
           <div id="v-lb">${leaderboardHTML()}</div>
         </section>
+
+        ${shadesHTML() ? `<section class="sec" aria-labelledby="h-shades">
+          <div class="sec-head"><div><span class="eyebrow">Shade by shade</span><h2 id="h-shades">Which nail colours should we stock?</h2></div>
+            <p>Try them on your nails, then tap “I’d buy” on every shade you’d actually order.</p></div>
+          <div id="v-shades">${shadesHTML()}</div>
+        </section>` : ''}
 
         <section class="sec" aria-labelledby="h-race">
           <div class="sec-head"><div><span class="eyebrow">Category race</span><h2 id="h-race">Which category should we launch first?</h2></div></div>
@@ -328,6 +358,7 @@ export default {
       $('#v-stats').innerHTML = statsHTML();
       $('#v-lb').innerHTML = leaderboardHTML();
       $('#v-race').innerHTML = raceHTML();
+      const vs = $('#v-shades'); if (vs) vs.innerHTML = shadesHTML();
       $('#v-pay').innerHTML = payHTML();
       if (fk) root.querySelector(fk)?.focus({ preventScroll: true });
     };

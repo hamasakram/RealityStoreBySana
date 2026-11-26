@@ -1,6 +1,6 @@
 // Try-On Studio: #tryon and #tryon-<productId>
 import * as S from '../store.js';
-import { esc, money, icon, priceTag, productArt, toast, openModal, go, catLabel, arLevel, ZONE_ICON } from '../ui.js';
+import { esc, money, icon, priceTag, productArt, toast, openModal, go, catLabel, arLevel, ZONE_ICON, shadeBtn } from '../ui.js';
 import { ZONES } from '../data.js';
 
 let engine = null;
@@ -19,8 +19,13 @@ const LOST_HINT = {
   face: 'Look at the camera — we’re finding your eyes',
   hands: 'Hold one or both hands up in front of the camera',
   body: 'Step back so your shoulders and hips are in frame',
-  feet: 'Prop the phone low and step back — whole body and feet in frame',
+  feet: 'Point the camera down at your feet',
 };
+
+const NAIL_HINT = 'Hold up the back of your hand, fingers spread';
+const PALM_HINT = 'Turn your hand around — show the back of your hand to see your nails';
+const lostHint = (p, engine) => p.category === 'nails' ? (engine && engine.palmOnly ? PALM_HINT : NAIL_HINT) : (engine && engine.hint) || LOST_HINT[p.zone];
+const tipFor = p => p.arTip || arLevel(p.zone).tip;
 
 function pick(param) {
   let p = (param && S.product(param)) || (S.isPreview() ? S.products()[0] : S.product('nova-bucket-hat')) || S.products()[0];
@@ -172,7 +177,7 @@ export default {
           <div class="in">
             <div class="ghost-wrap"><div class="ghost-art" id="ghost">${productArt(p, state.color.hex)}</div></div>
             <h2>Let’s see it on you</h2>
-            <p id="intro-tip">${esc(arLevel(p.zone).tip)} We need your camera to place the <b>${esc(p.name)}</b> on you.</p>
+            <p id="intro-tip">${esc(tipFor(p))} We need your camera to place the <b>${esc(p.name)}</b> on you.</p>
             <button class="btn btn-try btn-lg" id="start">${icon('camera')} Allow camera &amp; start</button>
             <span class="tiny">${icon('lock')} <span>Processed on your device, never uploaded or recorded.</span> <a href="#privacy" style="text-decoration:underline">How we handle your camera</a></span>
           </div>
@@ -247,7 +252,7 @@ export default {
           <div><span class="small dim">${esc(catLabel(p.category))} · ${esc(arLevel(p.zone).label)}</span><h2>${esc(p.name)}</h2>${pv ? `<span class="exp"><span class="small">Expected price</span>${`<span class="price">${money(p.price)}</span>`}</span>` : priceTag(p)}</div></div>
         <hr class="hr">
         ${p.colors?.length ? `<span class="label">Colour · <span style="color:var(--text)">${esc(color.name)}</span></span>
-        <div class="opts" id="colors">${p.colors.map((c, i) => `<button class="sw sw-lg ${c.name === color.name ? 'on' : ''}" style="background:${esc(c.hex)}" data-i="${i}" aria-label="${esc(c.name)}" aria-pressed="${c.name === color.name}"></button>`).join('')}</div>` : ''}
+        <div class="opts" id="colors">${p.colors.map((c, i) => `<button class="sw sw-lg ${c.name === color.name ? 'on' : ''}" style="background:${esc(c.hex)}" data-i="${i}" aria-label="${esc(c.name)}" aria-pressed="${c.name === color.name}"></button>`).join('')}</div>${pv && p.colors.length > 1 ? `<div style="margin-top:10px">${shadeBtn(p, color.name)}</div>` : ''}` : ''}
         ${p.sizes?.length > 1 ? `<span class="label" style="margin-top:14px">Size</span><div class="opts" id="sizes">${p.sizes.map(s => `<button class="chip ${s === size ? 'on' : ''}" data-s="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}
         ${sizeHint()}
         ${pv ? votePanel(p) : `<div class="buyrow" style="margin-top:16px">
@@ -267,7 +272,7 @@ export default {
       }));
       $('#pcard').querySelector('#use-size')?.addEventListener('click', e => { state.size = e.currentTarget.dataset.s; renderCard(); toast('Size ' + state.size + ' selected', 'check'); });
       $('#to-product').href = '#p-' + p.id; $('#err-product').href = '#p-' + p.id;
-      $('#fit-note').textContent = p.zone === 'feet' ? 'Feet try-on is a beta preview — it follows your ankles, heels and toes.' : p.zone === 'body' ? 'Jackets are a live preview of colour and style, not an exact drape.' : 'Nudge the size or height if it sits a little off.';
+      $('#fit-note').textContent = p.zone === 'feet' ? 'Feet try-on is a beta 3D preview — it follows your shoes (or your feet, once you stand in the outlines).' : p.zone === 'body' ? 'Jackets are a live preview of colour and style, not an exact drape.' : 'Nudge the size or height if it sits a little off.';
     }
     let askTimer = 0;
     function hideAsk() { clearTimeout(askTimer); const a = $('#ask'); if (a) a.hidden = true; }
@@ -305,7 +310,7 @@ export default {
       state.zone = p.zone; state.okMs = 0; state.lastOk = 0; hideAsk();
       root.querySelectorAll('#ztabs .chip').forEach(c => c.classList.toggle('on', c.dataset.zone === p.zone));
       renderCard(); renderRail(); updateGhost();
-      $('#intro-tip').innerHTML = `${esc(arLevel(p.zone).tip)} We need your camera to place the <b>${esc(p.name)}</b> on you.`;
+      $('#intro-tip').innerHTML = `${esc(tipFor(p))} We need your camera to place the <b>${esc(p.name)}</b> on you.`;
       document.title = `Try on ${p.name} · RealityStore`;
       if (engine && engine.running) {
         setHint('Loading ' + p.name + '…');
@@ -320,7 +325,7 @@ export default {
         engine = new TryOnEngine(stage, {
           onStatus: s => {
             if (s === 'model') { $('#load-title').textContent = 'Loading the try-on model…'; $('#load-sub').textContent = 'This happens once; after that it’s instant.'; }
-            if (s === 'live') { show(null); $('#hud').hidden = false; setHint(LOST_HINT[state.p.zone]); renderCard(); }
+            if (s === 'live') { show(null); $('#hud').hidden = false; setHint(lostHint(state.p, engine)); renderCard(); }
           },
           onMeasure: ({ headCm }) => {
             if (Math.abs((state.headCm || 0) - headCm) >= 0.5) { state.headCm = headCm; renderCard(); }
@@ -335,7 +340,7 @@ export default {
               if (pv && state.okMs >= ASK_AFTER_MS) maybeAsk();
             } else {
               state.lastOk = 0;
-              if (lostMs > 700) setHint(LOST_HINT[state.p.zone]);
+              if (lostMs > 700 || engine?.palmOnly) setHint(lostHint(state.p, engine));
             }
           },
         });

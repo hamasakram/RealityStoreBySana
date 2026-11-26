@@ -14,13 +14,14 @@ export const PREVIEW = {
     gloves: 'charcoal-knit-gloves',
     shoes: ['black-neon-mid-trainer', 'black-logo-slides'],   // two footwear styles in the test
     socks: 'charcoal-cotton-crew-socks',
+    nails: ['colorist-gel-shine-nail-polish', 'femina-nail-polish'],   // two nail paint ranges in the test
   },
 };
 
 export const ZONES = [
   { id: 'head', label: 'Head', blurb: 'Hats & caps', cats: ['hats'] },
   { id: 'face', label: 'Face', blurb: 'Sunglasses', cats: ['sunglasses'] },
-  { id: 'hands', label: 'Hands', blurb: 'Gloves', cats: ['gloves'] },
+  { id: 'hands', label: 'Hands', blurb: 'Gloves & nail paint', cats: ['gloves', 'nails'] },
   { id: 'body', label: 'Body', blurb: 'Jackets', cats: ['jackets'] },
   { id: 'feet', label: 'Feet', blurb: 'Shoes & socks', cats: ['shoes', 'socks'] },
 ];
@@ -30,6 +31,7 @@ export const CATEGORIES = [
   { id: 'sunglasses', label: 'Sunglasses', zone: 'face' },
   { id: 'jackets', label: 'Jackets', zone: 'body' },
   { id: 'gloves', label: 'Gloves', zone: 'hands' },
+  { id: 'nails', label: 'Nail paint', zone: 'hands' },
   { id: 'shoes', label: 'Shoes', zone: 'feet' },
   { id: 'socks', label: 'Socks', zone: 'feet' },
 ];
@@ -40,7 +42,7 @@ export const AR_LEVEL = {
   face: { label: 'Live 3D try-on', tip: 'Face the camera in good light.' },
   hands: { label: 'Live try-on', tip: 'Hold your hand up, palm or back to the camera.' },
   body: { label: 'Live preview', tip: 'Step back so your shoulders and hips are in frame.' },
-  feet: { label: 'Live preview · beta', tip: 'Lean the phone low, step back until your whole body and feet are in frame.' },
+  feet: { label: 'Live 3D try-on · beta', tip: 'Point your phone’s back camera down at your feet — only your feet need to be in view. In socks or barefoot? Stand in the foot outlines when they appear.' },
 };
 
 const C = (name, hex) => ({ name, hex });
@@ -292,6 +294,19 @@ PRODUCTS.push(
     image: 'img/products/black-aviator.jpg',
     desc: 'Classic double-bridge aviator in a slim black metal frame with smoke-grey lenses.',
     features: ['Smoke grey lenses, UV400', 'Slim black metal frame', 'Double bridge', 'Adjustable nose pads'] }),
+  // ---- Nail paint (owner's line-up). Shades sampled from the supplier's product photos; names are drafts.
+  T({ id: 'colorist-gel-shine-nail-polish', name: 'Colorist 7 Day Gel Shine Nail Polish', category: 'nails', zone: 'hands', model: 'polish', price: 650,
+    colors: [C('Nude Beige', '#C4AA98'), C('Dusty Teal', '#8FAEB7'), C('Jet Black', '#1C1C1E'), C('Raspberry Rose', '#B05666'), C('Ivory', '#E4E0D9'), C('Sand Beige', '#C6AF98'), C('Terracotta', '#B66A56'), C('Cool Grey', '#AAB1BA'), C('Coral Red', '#C23C2C'), C('Classic Red', '#8E0C08'), C('Wine', '#8A0A30'), C('Blush Nude', '#CDB09D'), C('Mustard Gold', '#D9B977')],
+    sizes: ['One bottle'],
+    arTip: 'Hold up the back of your hand, fingers spread, about 30 cm from the lens.',
+    desc: 'Gel-look nail polish with a high-shine finish that lasts up to 7 days — no lamp needed. 13 shades from soft nudes to deep reds.',
+    features: ['Gel-shine finish without a UV lamp', 'Up to 7 days wear', 'Wide brush for even coats', '13 shades in the test — vote for the ones you would buy'] }),
+  T({ id: 'femina-nail-polish', name: 'Femina Nail Polish', category: 'nails', zone: 'hands', model: 'polish', price: 350,
+    colors: [C('Tangerine', '#D98A45')],
+    sizes: ['One bottle'],
+    arTip: 'Hold up the back of your hand, fingers spread, about 30 cm from the lens.',
+    desc: 'Everyday glossy nail polish in a bright tangerine orange.',
+    features: ['Glossy finish', 'Quick-dry formula', 'Classic slim bottle'] }),
   T({ id: 'charcoal-knit-gloves', name: 'Charcoal Knit Gloves', category: 'gloves', zone: 'hands', model: 'knit', price: 890,
     colors: [C('Charcoal', '#3B3B3D')], sizes: ['S/M 18–20 cm', 'L/XL 21–23 cm'],
     image: 'img/products/charcoal-knit-gloves.jpg', arTex: { knit: 'img/products/charcoal-knit-gloves-knit.jpg' },
@@ -396,6 +411,7 @@ export function art(product, colorHex) {
     case 'cateye': body = glasses(c, L, V, shine, 'cateye'); break;
 
     case 'bomber': case 'denim': case 'puffer': body = jacket(product.model, c, V, H, lo, lo2, hi, shine); break;
+    case 'polish': body = polish(c, V, lo, lo2, hi, shine); break;
     case 'knit': case 'leather': case 'sport': body = glove(product.model, c, V, lo, lo2, hi, shine); break;
     case 'runner': case 'hightop': case 'loafer': case 'slide': body = shoe(product.model, c, V, H, lo, lo2, hi, shine); break;
     case 'crew': case 'stripe': case 'ankle': body = sock(product.model, c, V, lo, lo2, hi, shine); break;
@@ -447,6 +463,18 @@ function jacket(kind, c, V, H, lo, lo2, hi, shine) {
     <path d="M100 52v136" stroke="${shade(c, -0.6)}" stroke-width="2.5"/>`;
   return `<path d="${torso}" fill="${V}"/>${extra}
     <path d="M58 70c4-10 10-16 18-20" stroke="${shine}" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+}
+
+// Nail polish bottle with a paint splash behind it (drawn — no supplier photo needed)
+function polish(c, V, lo, lo2, hi, shine) {
+  return `<path d="M100 22c26-4 52 10 58 34 5 18 22 22 24 40 2 20-14 30-12 48 2 16-16 30-34 26-14-3-22 6-36 6s-24-8-38-6c-20 3-36-10-32-30 3-14-12-26-8-44 4-20 24-24 28-42 5-20 26-30 50-32z" fill="${c}" opacity=".9"/>
+    <circle cx="168" cy="168" r="9" fill="${c}"/><circle cx="184" cy="150" r="5" fill="${c}"/><circle cx="30" cy="160" r="6" fill="${c}"/>
+    <path d="M62 196c-8 0-12-6-12-14v-62c0-10 6-16 16-16h68c10 0 16 6 16 16v62c0 8-4 14-12 14z" fill="rgba(255,255,255,.55)" stroke="rgba(255,255,255,.9)" stroke-width="2"/>
+    <path d="M58 182v-58c0-6 4-10 10-10h64c6 0 10 4 10 10v58c0 5-3 8-8 8H66c-5 0-8-3-8-8z" fill="${V}"/>
+    <rect x="74" y="44" width="52" height="62" rx="5" fill="#141416"/>
+    <rect x="80" y="50" width="8" height="50" rx="4" fill="rgba(255,255,255,.22)"/>
+    <rect x="70" y="102" width="60" height="6" rx="2" fill="#0B0B0D"/>
+    <path d="M66 128v44" stroke="${shine}" stroke-width="5" stroke-linecap="round"/>`;
 }
 
 function glove(kind, c, V, lo, lo2, hi, shine) {

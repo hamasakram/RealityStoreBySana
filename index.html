@@ -6,10 +6,9 @@
 <title>RealityStore — Try it on and vote before we stock it</title>
 <meta name="description" content="RealityStore is testing before it stocks: try on a hat, sunglasses, a jacket, gloves, shoes and socks live through your camera, then vote for what you want us to sell.">
 <meta name="theme-color" content="#FBF8F3">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%234A8A68'/%3E%3Cstop offset='1' stop-color='%23234635'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='900' font-size='34' text-anchor='middle' fill='white'%3ER%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' shape-rendering='crispEdges'%3E%3Cpath fill='%231D3A2B' d='M2 0h12v1H2zM1 1h1v1H1zM14 1h1v1h-1zM0 2h1v12H0zM15 2h1v12h-1zM1 14h1v1H1zM14 14h1v1h-1zM2 15h12v1H2z'/%3E%3Cpath fill='%232F5D46' d='M2 1h12v1H2zM1 2h14v12H1zM2 14h12v1H2z'/%3E%3Cpath fill='%23FBF8F3' d='M4 4h6v1H4zM4 5h2v7H4zM10 5h2v3h-2zM6 8h4v1H6zM8 9h2v1H8zM9 10h2v1H9zM10 11h2v1h-2z'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/pixelify-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/press-start-2p-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -18,7 +17,7 @@
 <header class="site-header">
   <div class="wrap">
     <div class="hdr">
-      <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="nav"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <button class="icon-btn menu-btn" id="menu-btn" aria-label="Menu" aria-expanded="false" aria-controls="nav"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M1 2h14v2h-14zM1 7h14v2h-14zM1 12h14v2h-14z"/></svg></button>
       <a class="logo" href="#home" aria-label="RealityStore home"><span class="logo-mark">R</span><span>Reality<b>Store</b></span></a>
       <nav class="nav" id="nav" aria-label="Main">
         <a href="#shop">Try &amp; vote</a>
@@ -28,15 +27,15 @@
         <a class="nav-zone" href="#shop-body">Body</a>
         <a class="nav-zone" href="#shop-feet">Feet</a>
         <span class="nav-sep" aria-hidden="true"></span>
-        <a class="nav-vote" href="#vote"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Vote &amp; results</a>
-        <a class="nav-try" href="#tryon"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></svg>Try-On Studio</a>
+        <a class="nav-vote" href="#vote"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M7 2h3v12h-3zM2 7h3v7h-3zM12 9h3v5h-3zM0 14h16v2h-16z"/></svg>Vote &amp; results</a>
+        <a class="nav-try" href="#tryon"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 2h6v1h-6zM4 3h8v1h-8zM1 4h14v2h-14zM1 6h2v7h-2zM7 6h2v1h-2zM13 6h2v7h-2zM5 7h6v1h-6zM4 8h2v3h-2zM10 8h2v3h-2zM5 11h6v1h-6zM7 12h2v1h-2zM1 13h14v2h-14z"/></svg>Try-On Studio</a>
       </nav>
       <div class="hdr-tools">
-        <a class="btn btn-try hdr-try" href="#tryon" aria-label="Open the Try-On Studio"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/></svg><span>Try on</span></a>
-        <button class="icon-btn" id="search-btn" aria-label="Search"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
-        <a class="icon-btn" href="#wishlist" aria-label="Wishlist"><svg class="ico" viewBox="0 0 24 24"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></svg><span class="count" id="wish-count"></span></a>
-        <a class="icon-btn" href="#account" aria-label="Account"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></a>
-        <button class="icon-btn" data-act="open-cart" aria-label="Shopping bag"><svg class="ico" viewBox="0 0 24 24"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg><span class="count" id="cart-count"></span></button>
+        <a class="btn btn-try hdr-try" href="#tryon" aria-label="Open the Try-On Studio"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 2h6v1h-6zM4 3h8v1h-8zM1 4h14v2h-14zM1 6h2v7h-2zM7 6h2v1h-2zM13 6h2v7h-2zM5 7h6v1h-6zM4 8h2v3h-2zM10 8h2v3h-2zM5 11h6v1h-6zM7 12h2v1h-2zM1 13h14v2h-14z"/></svg><span>Try on</span></a>
+        <button class="icon-btn" id="search-btn" aria-label="Search"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M3 1h6v1h-6zM2 2h8v1h-8zM1 3h2v6h-2zM9 3h2v6h-2zM2 9h8v1h-8zM3 10h6v1h-6zM10 10h2v1h-2zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z"/></svg></button>
+        <a class="icon-btn" href="#wishlist" aria-label="Wishlist"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M2 2h4v1h-4zM10 2h4v1h-4zM1 3h6v1h-6zM9 3h6v1h-6zM0 4h16v3h-16zM1 7h14v1h-14zM2 8h12v1h-12zM3 9h10v1h-10zM4 10h8v1h-8zM5 11h6v1h-6zM6 12h4v1h-4zM7 13h2v1h-2z"/></svg><span class="count" id="wish-count"></span></a>
+        <a class="icon-btn" href="#account" aria-label="Account"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 1h6v1h-6zM4 2h2v4h-2zM10 2h2v4h-2zM5 6h6v1h-6zM4 8h8v1h-8zM2 9h3v1h-3zM11 9h3v1h-3zM1 10h2v3h-2zM13 10h2v3h-2zM1 13h14v2h-14z"/></svg></a>
+        <button class="icon-btn" data-act="open-cart" aria-label="Shopping bag"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M5 1h6v1h-6zM4 2h2v1h-2zM10 2h2v1h-2zM4 3h1v2h-1zM11 3h1v2h-1zM1 5h14v2h-14zM1 7h2v6h-2zM13 7h2v6h-2zM5 8h1v1h-1zM10 8h1v1h-1zM1 13h14v2h-14z"/></svg><span class="count" id="cart-count"></span></button>
       </div>
     </div>
     <div class="search-bar" id="search-bar">
@@ -75,12 +74,29 @@
 
 <div class="scrim" id="cart-scrim"></div>
 <aside class="drawer" id="cart-drawer" aria-label="Shopping bag">
-  <div class="drawer-head"><h3 style="margin:0">Your bag</h3><button class="icon-btn" id="cart-close" aria-label="Close bag"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="drawer-head"><h3 style="margin:0">Your bag</h3><button class="icon-btn" id="cart-close" aria-label="Close bag"><svg class="ico" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" d="M2 2h2v1h-2zM12 2h2v1h-2zM2 3h3v1h-3zM11 3h3v1h-3zM3 4h3v1h-3zM10 4h3v1h-3zM4 5h3v1h-3zM9 5h3v1h-3zM5 6h6v1h-6zM6 7h4v2h-4zM5 9h6v1h-6zM4 10h3v1h-3zM9 10h3v1h-3zM3 11h3v1h-3zM10 11h3v1h-3zM2 12h3v1h-3zM11 12h3v1h-3zM2 13h2v1h-2zM12 13h2v1h-2z"/></svg></button></div>
   <div class="drawer-body"></div>
   <div class="drawer-foot"></div>
 </aside>
 <div class="modal" id="modal"></div>
 <div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<!-- 8-bit look for decorative vector art only (product illustrations). Never applied to the live camera. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <filter id="px-pixelate" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feFlood x="2" y="2" width="1" height="1"/>
+    <feComposite width="5" height="5"/>
+    <feTile result="grid"/>
+    <feComposite in="SourceGraphic" in2="grid" operator="in"/>
+    <feMorphology operator="dilate" radius="2"/>
+  </filter>
+  <filter id="px-pixelate-sm" x="0" y="0" width="1" height="1" color-interpolation-filters="sRGB">
+    <feFlood x="1" y="1" width="1" height="1"/>
+    <feComposite width="3" height="3"/>
+    <feTile result="grid"/>
+    <feComposite in="SourceGraphic" in2="grid" operator="in"/>
+    <feMorphology operator="dilate" radius="1"/>
+  </filter>
+</svg>
 
 <script type="module" src="js/app.js"></script>
 </body>

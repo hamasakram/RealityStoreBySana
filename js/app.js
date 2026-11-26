@@ -101,6 +101,10 @@ document.addEventListener('click', e => {
     e.preventDefault();
     const on = S.toggleWant(t.dataset.id);
     toast(on ? 'Thanks! Your vote is in' : 'Vote removed', on ? 'heart' : 'x');
+  } else if (act === 'shade') {
+    e.preventDefault();
+    const on = S.toggleShade(t.dataset.id, t.dataset.shade);
+    toast(on ? `Thanks! Vote in for ${t.dataset.shade}` : 'Vote removed', on ? 'heart' : 'x');
   } else if (act === 'admin-signout') {
     S.adminSignOut(); toast('Signed out', 'lock'); go('#home');
   }

@@ -3,6 +3,7 @@ import { sql, send, isAdmin, readBody, handler, bad, CATEGORIES } from './_lib/d
 
 // Preview-mode voting. A "voter" is an anonymous random id kept in the visitor's browser.
 //  kind 'want'     target = product id,   one per voter+product (toggle)
+//                  or 'productid--shade-slug' for a vote on one colour/shade of a product (kept apart as 'shade')
 //  kind 'price'    target = product id,   value = rupees the visitor would pay (one per voter+product)
 //  kind 'category' target = category id,  one per voter (changing it moves the vote)
 const VOTER_RE = /^[a-z0-9]{16,40}$/;
@@ -11,8 +12,11 @@ const ipHash = req => createHash('sha256').update(String(req.headers['x-forwarde
 
 async function totals() {
   const rows = await sql`SELECT kind, target, count(*)::int AS n, round(avg(value))::int AS avg FROM votes GROUP BY kind, target`;
-  const t = { want: {}, category: {}, price: {} };
-  for (const r of rows) { t[r.kind][r.target] = r.kind === 'price' ? { n: r.n, avg: r.avg } : r.n; }
+  const t = { want: {}, shade: {}, category: {}, price: {} };
+  for (const r of rows) {
+    if (r.kind === 'want' && r.target.includes('--')) t.shade[r.target] = r.n;
+    else t[r.kind][r.target] = r.kind === 'price' ? { n: r.n, avg: r.avg } : r.n;
+  }
   const [{ people }] = await sql`SELECT count(DISTINCT voter)::int AS people FROM votes`;
   return { ...t, people };
 }
@@ -24,7 +28,8 @@ export default handler({
     const voter = String(req.query.voter || '');
     if (VOTER_RE.test(voter)) {
       const mine = await sql`SELECT kind, target, value FROM votes WHERE voter = ${voter}`;
-      out.mine = { want: mine.filter(v => v.kind === 'want').map(v => v.target), category: mine.find(v => v.kind === 'category')?.target || null,
+      out.mine = { want: mine.filter(v => v.kind === 'want' && !v.target.includes('--')).map(v => v.target),
+        shade: mine.filter(v => v.kind === 'want' && v.target.includes('--')).map(v => v.target), category: mine.find(v => v.kind === 'category')?.target || null,
         price: Object.fromEntries(mine.filter(v => v.kind === 'price').map(v => [v.target, v.value])) };
     }
     if (isAdmin(req) && req.query.detail === '1') {
@@ -45,8 +50,13 @@ export default handler({
 
     if (kind === 'want') {
       if (!PRODUCT_RE.test(target)) throw bad('Invalid product');
-      const exists = await sql`SELECT 1 FROM products WHERE id = ${target}`;
-      if (!exists.length) throw bad('Unknown product', 404);
+      const [pid, shade] = target.split('--');
+      const rows = await sql`SELECT data FROM products WHERE id = ${pid}`;
+      if (!rows.length) throw bad('Unknown product', 404);
+      if (shade !== undefined) {
+        const slug = n => String(n).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        if (!(rows[0].data.colors || []).some(c => slug(c.name) === shade)) throw bad('Unknown shade', 404);
+      }
       if (b.on === false) await sql`DELETE FROM votes WHERE voter = ${voter} AND kind = 'want' AND target = ${target}`;
       else await sql`INSERT INTO votes (voter, kind, target, ip_hash) VALUES (${voter}, 'want', ${target}, ${ip}) ON CONFLICT DO NOTHING`;
     } else if (kind === 'price') {

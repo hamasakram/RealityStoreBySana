@@ -9,10 +9,11 @@ const TEMPLATES = {
   sunglasses: [['round', 'Round frames'], ['aviator', 'Aviator'], ['wayfarer', 'Wayfarer'], ['cateye', 'Cat-eye']],
   jackets: [['bomber', 'Bomber'], ['denim', 'Denim trucker'], ['puffer', 'Quilted puffer']],
   gloves: [['knit', 'Knit gloves'], ['leather', 'Leather gloves'], ['sport', 'Sport gloves']],
+  nails: [['polish', 'Nail polish']],
   shoes: [['runner', 'Running shoe'], ['hightop', 'High-top sneaker'], ['loafer', 'Loafer']],
   socks: [['crew', 'Crew socks'], ['stripe', 'Striped socks'], ['ankle', 'Ankle socks']],
 };
-const DEFAULT_SIZES = { hats: 'S, M, L', sunglasses: 'One size', jackets: 'S, M, L, XL', gloves: 'S, M, L', shoes: '39, 40, 41, 42, 43, 44', socks: 'S, M, L' };
+const DEFAULT_SIZES = { hats: 'S, M, L', sunglasses: 'One size', jackets: 'S, M, L, XL', gloves: 'S, M, L', shoes: '39, 40, 41, 42, 43, 44', socks: 'S, M, L', nails: 'One bottle' };
 const TRACKER = { head: 'Face landmarks (478 points)', face: 'Face landmarks (478 points)', hands: '21-point hand tracking', body: '33-point body pose', feet: 'Body pose · ankles, heels, toes' };
 const STATUSES = ['Confirmed', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
 const NAV = [
@@ -807,6 +808,12 @@ function votesPanel() {
     ${lineupRows.some(r => r.want) ? bars(lineupRows, { lab: r => r.p.name, val: r => r.want, sub: r => `${r.tryon} try-on${r.tryon === 1 ? '' : 's'}`, title: r => `${r.p.name}: ${r.want} want votes, ${r.tryon} try-ons` }) : `<p class="note hint" style="margin:0 0 6px">${icon('sparkle')}<span>No “I want this” votes yet. Share the store link and these bars fill in.</span></p>`}
     <div style="margin-top:18px">${wantTable(rows)}</div>
   </section>
+  ${S.products().filter(p => p.colors?.length > 1).map(p => {
+    const list = p.colors.map(c => ({ c, n: S.shadeCount(p.id, c.name) })).sort((a, b) => b.n - a.n);
+    return `<section class="glass pad" style="margin-bottom:18px"><h3>Shades · ${esc(p.name)}</h3>
+      <p class="small muted" style="margin-bottom:14px">“I’d buy this shade” votes. Stock the top shades first.</p>
+      ${list.some(x => x.n) ? bars(list, { lab: x => x.c.name, val: x => x.n }) : '<p class="muted" style="margin:0">No shade votes yet.</p>'}</section>`;
+  }).join('')}
   <div class="dash2">
     <section class="glass pad"><h3>Which category first?</h3><p class="small muted" style="margin-bottom:14px">One pick per visitor; they can change it.</p>${catRanking()}</section>
     <section class="glass pad"><h3>Votes per day</h3><p class="small muted" style="margin-bottom:6px">Last 30 days, all vote types.</p>${dailySection()}</section>

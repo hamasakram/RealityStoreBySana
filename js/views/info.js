@@ -142,6 +142,7 @@ function howItWorks() {
       <div class="scroll"><table class="tbl"><thead><tr><th>Body part</th><th>Products</th><th>How it's tracked</th><th>Try-on</th></tr></thead><tbody>
         <tr><td><span class="row" style="gap:8px;flex-wrap:nowrap">${icon('head')} Head &amp; face</span></td><td>Hats, caps, sunglasses</td><td>Face landmarks — 478 points mapped across your face, including head tilt and turn</td><td><span class="lvl l3">Live 3D</span></td></tr>
         <tr><td><span class="row" style="gap:8px;flex-wrap:nowrap">${icon('hand')} Hands</span></td><td>Gloves</td><td>21-point hand tracking — every knuckle and fingertip, palm or back</td><td><span class="lvl l3">Live</span></td></tr>
+        <tr><td><span class="row" style="gap:8px;flex-wrap:nowrap">${icon('hand')} Nails</span></td><td>Nail paint</td><td>The same hand tracking paints every fingernail — show the back of your hand</td><td><span class="lvl l3">Live</span></td></tr>
         <tr><td><span class="row" style="gap:8px;flex-wrap:nowrap">${icon('shirt')} Body</span></td><td>Jackets</td><td>33-point body pose — shoulders, elbows and hips place and size the jacket</td><td><span class="lvl l2">Live preview</span></td></tr>
         <tr><td><span class="row" style="gap:8px;flex-wrap:nowrap">${icon('shoe')} Feet</span></td><td>Shoes, socks</td><td>Body pose ankles, heels and toes — needs your full body in frame</td><td><span class="lvl">Preview · beta</span></td></tr>
       </tbody></table></div>
@@ -157,13 +158,13 @@ function howItWorks() {
       <section class="glass pad"><h2 style="font-size:22px">Tips for a great fit</h2><ul class="ticks">
         <li>${icon('sun')}<span><b>Face the light.</b> A window in front of you beats a lamp behind you.</span></li>
         <li>${icon('head')}<span><b>Arm's length for hats and glasses</b> — about 40–60 cm, whole face in view.</span></li>
-        <li>${icon('hand')}<span><b>Hands up, fingers spread</b> for gloves, about 30 cm from the lens.</span></li>
+        <li>${icon('hand')}<span><b>Hands up, fingers spread</b> for gloves — and the back of your hand for nail paint — about 30 cm from the lens.</span></li>
         <li>${icon('shirt')}<span><b>Step back 1.5–2 m</b> for jackets, and further for shoes so your feet are in frame.</span></li>
         <li>${icon('flip')}<span><b>Plain background helps</b>, and take off hats before trying another one.</span></li>
       </ul></section>
     </div>
     ${S.isPreview() ? `<p class="note" style="margin:0"><b>Right now RealityStore is a public test.</b> ${PV_LINE}</p>` : ''}
-    <section class="glass pad cta"><div><h2>Ready to see it on you?</h2><p>${S.isPreview() ? 'Six products, one per category. Try one on in seconds.' : 'Pick anything from the catalogue and try it in seconds.'}</p></div>
+    <section class="glass pad cta"><div><h2>Ready to see it on you?</h2><p>${S.isPreview() ? 'One product per category. Try one on in seconds.' : 'Pick anything from the catalogue and try it in seconds.'}</p></div>
       <a class="btn btn-try btn-lg" href="#tryon">${icon('camera')} Open the Try-On Studio</a></section>`;
 }
 
@@ -335,7 +336,7 @@ function contactDone(m) {
 
 function about() {
   return `<section class="glass pad"><h2>What RealityStore is</h2>
-      <p>RealityStore is an online accessories and outerwear store — hats, sunglasses, jackets, gloves, shoes and socks — where every product can be tried on live through your phone or laptop camera before you buy it.</p>
+      <p>RealityStore is an online accessories and outerwear store — hats, sunglasses, jackets, gloves, nail paint, shoes and socks — where every product can be tried on live through your phone or laptop camera before you buy it.</p>
       <p style="margin:0">The camera becomes a mirror, and the product appears on you, moving as you move.</p>
       ${S.isPreview() ? `<p class="note" style="margin:14px 0 0"><b>Right now we’re in a public test.</b> ${PV_LINE}</p>` : ''}</section>
     <section class="glass pad"><h2>Why try-on?</h2>

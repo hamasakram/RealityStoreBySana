@@ -268,12 +268,12 @@ export function voterId() {
   if (!v) { const a = new Uint8Array(12); crypto.getRandomValues(a); v = Array.from(a, x => (x % 36).toString(36)).join('') + Date.now().toString(36); save('voter', v, true); }
   return v;
 }
-const votes = { totals: { want: {}, category: {}, price: {}, people: 0 }, mine: { want: [], category: null, price: {} }, loaded: false };
+const votes = { totals: { want: {}, shade: {}, category: {}, price: {}, people: 0 }, mine: { want: [], shade: [], category: null, price: {} }, loaded: false };
 export async function loadVotes() {
-  if (!api.ok) { votes.mine = load('myvotes', votes.mine); votes.loaded = true; emit('votes'); return; }
+  if (!api.ok) { votes.mine = { shade: [], ...load('myvotes', votes.mine) }; votes.loaded = true; emit('votes'); return; }
   try {
     const d = await call('vote?voter=' + voterId());
-    votes.totals = d.totals; if (d.mine) votes.mine = d.mine; votes.loaded = true;
+    votes.totals = { shade: {}, ...d.totals }; if (d.mine) votes.mine = { shade: [], ...d.mine }; votes.loaded = true;
     save('myvotes', votes.mine, true); emit('votes');
   } catch (e) { /* offline: keep local */ }
 }
@@ -288,7 +288,7 @@ export const priceStats = id => votes.totals.price[id] || null;
 async function postVote(body) {
   save('myvotes', votes.mine, true); emit('votes');
   if (!api.ok) return;
-  try { const d = await call('vote', { method: 'POST', body: { voter: voterId(), ...body } }); votes.totals = d.totals; emit('votes'); }
+  try { const d = await call('vote', { method: 'POST', body: { voter: voterId(), ...body } }); votes.totals = { shade: {}, ...d.totals }; emit('votes'); }
   catch (e) { errorHandler('Vote not saved: ' + e.message); }
 }
 export function toggleWant(id) {
@@ -296,6 +296,17 @@ export function toggleWant(id) {
   votes.mine.want = on ? [...votes.mine.want, id] : votes.mine.want.filter(x => x !== id);
   votes.totals.want[id] = Math.max(0, (votes.totals.want[id] || 0) + (on ? 1 : -1));
   postVote({ kind: 'want', target: id, on });
+  return on;
+}
+// Shade (colour) votes: "I'd buy this shade" — target is 'productId--shade-slug'
+export const shadeKey = (id, name) => id + '--' + slugify(name).slice(0, 40);
+export const wantsShade = (id, name) => (votes.mine.shade || []).includes(shadeKey(id, name));
+export const shadeCount = (id, name) => (votes.totals.shade || {})[shadeKey(id, name)] || 0;
+export function toggleShade(id, name) {
+  const k = shadeKey(id, name), on = !wantsShade(id, name);
+  votes.mine.shade = on ? [...(votes.mine.shade || []), k] : votes.mine.shade.filter(x => x !== k);
+  votes.totals.shade = { ...votes.totals.shade, [k]: Math.max(0, shadeCount(id, name) + (on ? 1 : -1)) };
+  postVote({ kind: 'want', target: k, on });
   return on;
 }
 export function voteCategory(cat) {

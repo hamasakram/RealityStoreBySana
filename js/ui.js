@@ -10,50 +10,52 @@ export const arLevel = zone => AR_LEVEL[zone] || AR_LEVEL.head;
 export function go(hash) { if (location.hash === hash) window.dispatchEvent(new HashChangeEvent('hashchange')); else location.hash = hash; }
 export { art };
 
+// Pixel-art icon set: each icon is drawn on a 16x16 grid with square pixels only (crisp, 8-bit style).
+// Values are SVG path data made of 1px-unit rectangles; icon() fills them with currentColor.
 const ICONS = {
-  search: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>',
-  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',
-  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
-  bag: '<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
-  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
-  x: '<path d="M6 6l12 12M18 6L6 18"/>',
-  camera: '<rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8.5 7l1.5-3h4l1.5 3"/><circle cx="12" cy="13.5" r="3.5"/>',
-  cube: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/>',
-  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
-  back: '<path d="M19 12H5M11 6l-6 6 6 6"/>',
-  check: '<path d="M5 12.5l4.5 4.5L19 7"/>',
-  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
-  plus: '<path d="M12 5v14M5 12h14"/>',
-  minus: '<path d="M5 12h14"/>',
-  truck: '<path d="M3 6h11v10H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
-  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
-  refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7M20 5v6h-6"/>',
-  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/>',
-  upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
-  edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
-  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
-  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
-  grid: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
-  lock: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
-  share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/>',
-  download: '<path d="M12 4v12M7 11l5 5 5-5M4 20h16"/>',
-  flip: '<path d="M4 8h12l-3-3M20 16H8l3 3"/>',
-  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
-  star: '<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
-  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
-  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/>',
-  pin: '<path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/>',
-  card: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
-  cash: '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/>',
-  wallet: '<path d="M4 7h15a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h12"/><circle cx="16.5" cy="13.5" r="1.3"/>',
-  head: '<circle cx="12" cy="10" r="6"/><path d="M5 9c2-6 12-6 14 0"/><path d="M8 20c1-2 2.5-3 4-3s3 1 4 3"/>',
-  glasses: '<circle cx="7" cy="14" r="4"/><circle cx="17" cy="14" r="4"/><path d="M11 13.5c.6-.6 1.4-.6 2 0M3 14L2 9M21 14l1-5"/>',
-  hand: '<path d="M8 13V5.5a1.5 1.5 0 0 1 3 0V11V4a1.5 1.5 0 0 1 3 0v7-5.5a1.5 1.5 0 0 1 3 0V14c0 4-2.5 7-6 7-2.5 0-4-1.5-5.5-3.5L3.6 14a1.5 1.5 0 0 1 2.4-1.8z"/>',
-  shirt: '<path d="M8 3l4 2 4-2 5 3-2 5-3-1v11H8V10l-3 1-2-5z"/>',
-  shoe: '<path d="M3 17v-6c2 0 4 1 5 3l2 1c4 1 8 1 10 3v2H3z"/><path d="M3 17h17"/>',
+  search: 'M3 1h6v1h-6zM2 2h8v1h-8zM1 3h2v6h-2zM9 3h2v6h-2zM2 9h8v1h-8zM3 10h6v1h-6zM10 10h2v1h-2zM9 11h3v1h-3zM10 12h3v1h-3zM11 13h3v1h-3zM12 14h2v1h-2z',
+  user: 'M5 1h6v1h-6zM4 2h2v4h-2zM10 2h2v4h-2zM5 6h6v1h-6zM4 8h8v1h-8zM2 9h3v1h-3zM11 9h3v1h-3zM1 10h2v3h-2zM13 10h2v3h-2zM1 13h14v2h-14z',
+  heart: 'M2 2h4v1h-4zM10 2h4v1h-4zM1 3h6v1h-6zM9 3h6v1h-6zM0 4h16v3h-16zM1 7h14v1h-14zM2 8h12v1h-12zM3 9h10v1h-10zM4 10h8v1h-8zM5 11h6v1h-6zM6 12h4v1h-4zM7 13h2v1h-2z',
+  bag: 'M5 1h6v1h-6zM4 2h2v1h-2zM10 2h2v1h-2zM4 3h1v2h-1zM11 3h1v2h-1zM1 5h14v2h-14zM1 7h2v6h-2zM13 7h2v6h-2zM5 8h1v1h-1zM10 8h1v1h-1zM1 13h14v2h-14z',
+  menu: 'M1 2h14v2h-14zM1 7h14v2h-14zM1 12h14v2h-14z',
+  x: 'M2 2h2v1h-2zM12 2h2v1h-2zM2 3h3v1h-3zM11 3h3v1h-3zM3 4h3v1h-3zM10 4h3v1h-3zM4 5h3v1h-3zM9 5h3v1h-3zM5 6h6v1h-6zM6 7h4v2h-4zM5 9h6v1h-6zM4 10h3v1h-3zM9 10h3v1h-3zM3 11h3v1h-3zM10 11h3v1h-3zM2 12h3v1h-3zM11 12h3v1h-3zM2 13h2v1h-2zM12 13h2v1h-2z',
+  camera: 'M5 2h6v1h-6zM4 3h8v1h-8zM1 4h14v2h-14zM1 6h2v7h-2zM7 6h2v1h-2zM13 6h2v7h-2zM5 7h6v1h-6zM4 8h2v3h-2zM10 8h2v3h-2zM5 11h6v1h-6zM7 12h2v1h-2zM1 13h14v2h-14z',
+  cube: 'M7 0h2v1h-2zM5 1h6v1h-6zM3 2h4v1h-4zM9 2h4v1h-4zM1 3h4v1h-4zM11 3h4v1h-4zM1 4h3v1h-3zM12 4h3v1h-3zM1 5h1v6h-1zM3 5h4v1h-4zM9 5h4v1h-4zM14 5h1v6h-1zM6 6h4v1h-4zM7 7h2v6h-2zM1 11h2v1h-2zM13 11h2v1h-2zM2 12h3v1h-3zM11 12h3v1h-3zM4 13h3v1h-3zM9 13h3v1h-3zM6 14h4v1h-4z',
+  arrow: 'M8 2h2v1h-2zM8 3h3v1h-3zM9 4h3v1h-3zM10 5h3v1h-3zM11 6h3v1h-3zM1 7h14v2h-14zM11 9h3v1h-3zM10 10h3v1h-3zM9 11h3v1h-3zM8 12h3v1h-3zM8 13h2v1h-2z',
+  back: 'M6 2h2v1h-2zM5 3h3v1h-3zM4 4h3v1h-3zM3 5h3v1h-3zM2 6h3v1h-3zM1 7h14v2h-14zM2 9h3v1h-3zM3 10h3v1h-3zM4 11h3v1h-3zM5 12h3v1h-3zM6 13h2v1h-2z',
+  check: 'M13 3h2v1h-2zM12 4h3v1h-3zM11 5h3v1h-3zM10 6h3v1h-3zM1 7h2v1h-2zM9 7h3v1h-3zM1 8h3v1h-3zM8 8h3v1h-3zM2 9h3v1h-3zM7 9h3v1h-3zM3 10h6v1h-6zM4 11h4v1h-4zM5 12h2v1h-2z',
+  trash: 'M6 1h4v1h-4zM5 2h2v1h-2zM9 2h2v1h-2zM1 3h14v2h-14zM2 5h2v8h-2zM12 5h2v8h-2zM5 6h2v6h-2zM9 6h2v6h-2zM2 13h12v1h-12zM3 14h10v1h-10z',
+  plus: 'M7 2h2v5h-2zM2 7h12v2h-12zM7 9h2v5h-2z',
+  minus: 'M2 7h12v2h-12z',
+  truck: 'M0 2h10v1h-10zM0 3h1v6h-1zM9 3h1v1h-1zM9 4h5v1h-5zM9 5h1v4h-1zM13 5h2v1h-2zM14 6h2v3h-2zM0 9h16v2h-16zM2 11h3v1h-3zM11 11h3v1h-3zM1 12h5v1h-5zM10 12h5v1h-5zM2 13h3v1h-3zM11 13h3v1h-3z',
+  shield: 'M7 0h2v1h-2zM4 1h3v1h-3zM9 1h3v1h-3zM1 2h4v1h-4zM11 2h4v1h-4zM1 3h2v7h-2zM13 3h2v7h-2zM10 5h2v1h-2zM9 6h2v1h-2zM4 7h2v1h-2zM8 7h2v1h-2zM5 8h4v1h-4zM6 9h2v1h-2zM2 10h2v2h-2zM12 10h2v2h-2zM3 12h2v1h-2zM11 12h2v1h-2zM4 13h2v1h-2zM10 13h2v1h-2zM5 14h2v1h-2zM9 14h2v1h-2zM7 15h2v1h-2z',
+  refresh: 'M5 1h6v1h-6zM13 1h2v1h-2zM3 2h10v1h-10zM14 2h1v1h-1zM2 3h3v1h-3zM11 3h4v1h-4zM1 4h2v2h-2zM10 4h5v1h-5zM0 6h2v4h-2zM14 8h2v2h-2zM1 10h2v1h-2zM13 10h2v1h-2zM1 11h3v1h-3zM12 11h3v1h-3zM2 12h3v1h-3zM11 12h3v1h-3zM3 13h10v1h-10zM5 14h6v1h-6z',
+  sparkle: 'M6 0h1v2h-1zM5 2h3v2h-3zM4 4h5v1h-5zM2 5h9v1h-9zM0 6h13v1h-13zM2 7h9v1h-9zM4 8h5v1h-5zM5 9h3v2h-3zM13 10h1v1h-1zM6 11h1v2h-1zM12 11h3v1h-3zM11 12h5v1h-5zM12 13h3v1h-3zM13 14h1v1h-1z',
+  upload: 'M7 0h2v1h-2zM6 1h4v1h-4zM5 2h6v1h-6zM4 3h2v1h-2zM7 3h2v7h-2zM10 3h2v1h-2zM3 4h2v1h-2zM11 4h2v1h-2zM1 11h2v2h-2zM13 11h2v2h-2zM1 13h14v2h-14z',
+  download: 'M7 0h2v7h-2zM3 5h2v1h-2zM11 5h2v1h-2zM4 6h2v1h-2zM10 6h2v1h-2zM5 7h6v1h-6zM6 8h4v1h-4zM7 9h2v1h-2zM1 11h2v2h-2zM13 11h2v2h-2zM1 13h14v2h-14z',
+  edit: 'M11 1h2v1h-2zM10 2h4v1h-4zM9 3h2v1h-2zM12 3h3v1h-3zM8 4h2v1h-2zM11 4h3v1h-3zM7 5h2v1h-2zM10 5h3v1h-3zM6 6h2v1h-2zM9 6h3v1h-3zM5 7h2v1h-2zM8 7h3v1h-3zM4 8h2v1h-2zM7 8h3v1h-3zM3 9h2v1h-2zM6 9h3v1h-3zM2 10h5v1h-5zM2 11h4v1h-4zM2 12h3v1h-3zM1 14h14v1h-14z',
+  eye: 'M5 3h6v1h-6zM3 4h3v1h-3zM10 4h3v1h-3zM2 5h2v1h-2zM7 5h2v1h-2zM12 5h2v1h-2zM1 6h2v1h-2zM6 6h4v1h-4zM13 6h2v1h-2zM0 7h2v2h-2zM5 7h6v2h-6zM14 7h2v2h-2zM1 9h2v1h-2zM6 9h4v1h-4zM13 9h2v1h-2zM2 10h2v1h-2zM7 10h2v1h-2zM12 10h2v1h-2zM3 11h3v1h-3zM10 11h3v1h-3zM5 12h6v1h-6z',
+  chart: 'M7 2h3v12h-3zM2 7h3v7h-3zM12 9h3v5h-3zM0 14h16v2h-16z',
+  grid: 'M1 1h6v2h-6zM9 1h6v2h-6zM1 3h2v2h-2zM5 3h2v2h-2zM9 3h2v2h-2zM13 3h2v2h-2zM1 5h6v2h-6zM9 5h6v2h-6zM1 9h6v2h-6zM9 9h6v2h-6zM1 11h2v2h-2zM5 11h2v2h-2zM9 11h2v2h-2zM13 11h2v2h-2zM1 13h6v2h-6zM9 13h6v2h-6z',
+  lock: 'M5 1h6v1h-6zM4 2h2v4h-2zM10 2h2v4h-2zM2 6h12v3h-12zM2 9h5v4h-5zM9 9h5v4h-5zM2 13h12v2h-12z',
+  share: 'M11 1h4v3h-4zM10 4h5v1h-5zM8 5h2v1h-2zM1 6h4v1h-4zM6 6h2v1h-2zM1 7h5v2h-5zM1 9h4v1h-4zM6 9h2v1h-2zM8 10h2v1h-2zM10 11h5v1h-5zM11 12h4v3h-4z',
+  flip: 'M11 1h1v1h-1zM11 2h2v1h-2zM1 3h13v1h-13zM1 4h14v1h-14zM1 5h13v1h-13zM11 6h2v1h-2zM11 7h1v1h-1zM4 8h1v1h-1zM3 9h2v1h-2zM2 10h13v1h-13zM1 11h14v1h-14zM2 12h13v1h-13zM3 13h2v1h-2zM4 14h1v1h-1z',
+  sun: 'M7 0h2v2h-2zM2 2h2v2h-2zM12 2h2v2h-2zM6 4h4v1h-4zM5 5h6v1h-6zM4 6h8v4h-8zM0 7h2v2h-2zM14 7h2v2h-2zM5 10h6v1h-6zM6 11h4v1h-4zM2 12h2v2h-2zM12 12h2v2h-2zM7 14h2v2h-2z',
+  star: 'M7 0h2v2h-2zM6 2h4v2h-4zM5 4h6v1h-6zM0 5h16v1h-16zM1 6h14v1h-14zM3 7h10v1h-10zM4 8h8v2h-8zM3 10h4v1h-4zM9 10h4v1h-4zM3 11h3v1h-3zM10 11h3v1h-3zM2 12h3v1h-3zM11 12h3v1h-3zM2 13h2v1h-2zM12 13h2v1h-2z',
+  mail: 'M0 2h16v1h-16zM0 3h3v1h-3zM13 3h3v1h-3zM0 4h1v9h-1zM2 4h2v1h-2zM12 4h2v1h-2zM15 4h1v9h-1zM3 5h2v1h-2zM11 5h2v1h-2zM4 6h2v1h-2zM10 6h2v1h-2zM5 7h6v1h-6zM6 8h4v1h-4zM0 13h16v1h-16z',
+  phone: 'M4 0h8v1h-8zM3 1h10v1h-10zM3 2h2v8h-2zM11 2h2v8h-2zM3 10h10v1h-10zM3 11h4v2h-4zM9 11h4v2h-4zM3 13h10v1h-10zM4 14h8v1h-8z',
+  pin: 'M5 0h6v1h-6zM3 1h10v1h-10zM2 2h3v1h-3zM11 2h3v1h-3zM1 3h3v1h-3zM7 3h2v1h-2zM12 3h3v1h-3zM1 4h2v2h-2zM6 4h4v2h-4zM13 4h2v2h-2zM1 6h3v1h-3zM7 6h2v1h-2zM12 6h3v1h-3zM2 7h3v1h-3zM11 7h3v1h-3zM2 8h4v1h-4zM10 8h4v1h-4zM3 9h4v1h-4zM9 9h4v1h-4zM4 10h3v1h-3zM9 10h3v1h-3zM5 11h6v1h-6zM6 12h4v1h-4zM7 13h2v1h-2z',
+  card: 'M0 2h16v2h-16zM0 4h2v1h-2zM14 4h2v1h-2zM0 5h16v2h-16zM0 7h2v5h-2zM14 7h2v5h-2zM3 10h5v2h-5zM0 12h16v2h-16z',
+  cash: 'M0 3h16v2h-16zM0 5h2v5h-2zM6 5h4v1h-4zM14 5h2v5h-2zM5 6h2v3h-2zM9 6h2v3h-2zM3 7h1v1h-1zM12 7h1v1h-1zM6 9h4v1h-4zM0 10h16v2h-16z',
+  wallet: 'M2 1h11v2h-11zM0 3h15v2h-15zM0 5h2v7h-2zM13 5h2v2h-2zM9 7h7v1h-7zM9 8h2v2h-2zM13 8h3v2h-3zM9 10h7v1h-7zM13 11h2v1h-2zM0 12h15v2h-15z',
+  head: 'M5 1h6v1h-6zM3 2h10v1h-10zM2 3h12v1h-12zM1 4h14v2h-14zM0 6h16v1h-16zM1 7h2v4h-2zM13 7h2v4h-2zM5 9h2v1h-2zM9 9h2v1h-2zM2 11h2v2h-2zM12 11h2v2h-2zM6 12h4v1h-4zM3 13h2v1h-2zM11 13h2v1h-2zM4 14h8v1h-8z',
+  glasses: 'M0 3h2v2h-2zM14 3h2v2h-2zM0 5h16v2h-16zM1 7h6v1h-6zM9 7h6v1h-6zM1 8h5v3h-5zM10 8h5v3h-5zM2 11h4v1h-4zM10 11h4v1h-4zM3 12h2v1h-2zM11 12h2v1h-2z',
+  hand: 'M7 0h2v8h-2zM5 1h1v1h-1zM10 1h1v1h-1zM4 2h2v6h-2zM10 2h2v6h-2zM13 3h2v5h-2zM1 7h2v3h-2zM4 8h10v1h-10zM4 9h9v1h-9zM1 10h13v1h-13zM2 11h12v1h-12zM3 12h10v1h-10zM4 13h8v1h-8zM5 14h6v1h-6z',
+  shirt: 'M4 1h3v1h-3zM9 1h3v1h-3zM2 2h4v1h-4zM10 2h4v1h-4zM1 3h5v1h-5zM10 3h5v1h-5zM0 4h16v2h-16zM1 6h3v1h-3zM5 6h6v8h-6zM12 6h3v1h-3z',
+  shoe: 'M1 4h4v2h-4zM1 6h5v1h-5zM1 7h6v1h-6zM1 8h8v1h-8zM1 9h11v1h-11zM1 10h14v1h-14zM0 11h16v2h-16zM1 13h14v1h-14z',
 };
 export function icon(name, cls = '') {
-  return `<svg class="ico ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+  return `<svg class="ico ${cls}" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><path fill="currentColor" stroke="none" d="${ICONS[name] || ''}"/></svg>`;
 }
 export const ZONE_ICON = { head: 'head', face: 'glasses', hands: 'hand', body: 'shirt', feet: 'shoe' };
 
@@ -93,7 +95,23 @@ export function syncWantButtons(scope = document) {
     b.innerHTML = wantInner(id);
   });
 }
-S.on(k => { if (k === 'votes') syncWantButtons(); });
+// "I'd buy this shade" — one vote per colour of a multi-shade product (nail paint)
+function shadeInner(id, name) {
+  const on = S.wantsShade(id, name), n = S.shadeCount(id, name);
+  return `${icon(on ? 'check' : 'heart')}<span class="wl">${on ? 'You’d buy' : 'I’d buy'} <b>${esc(name)}</b></span>${n ? `<span class="wn">${n}</span>` : ''}`;
+}
+export function shadeBtn(p, name, cls = 'btn-sm') {
+  if (!S.isPreview() || !(p.colors?.length > 1)) return '';
+  const on = S.wantsShade(p.id, name);
+  return `<button type="button" class="btn want-btn shade-btn ${cls} ${on ? 'on' : ''}" data-act="shade" data-id="${esc(p.id)}" data-shade="${esc(name)}" aria-pressed="${on}">${shadeInner(p.id, name)}</button>`;
+}
+export function syncShadeButtons(scope = document) {
+  scope.querySelectorAll('button[data-act="shade"]').forEach(b => {
+    const on = S.wantsShade(b.dataset.id, b.dataset.shade);
+    b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.innerHTML = shadeInner(b.dataset.id, b.dataset.shade);
+  });
+}
+S.on(k => { if (k === 'votes') { syncWantButtons(); syncShadeButtons(); } });
 
 export const pct = (n, total) => total > 0 ? Math.round((n / total) * 100) : 0;
 export const plural = (n, one, many = one + 's') => `${n.toLocaleString('en-US')} ${n === 1 ? one : many}`;

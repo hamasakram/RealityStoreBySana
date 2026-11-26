@@ -1,5 +1,5 @@
 // 2D try-on renderers drawn on a canvas over the camera image:
-// gloves (hand landmarks), jackets (body pose), shoes & socks (body pose: ankles, heels, toes).
+// gloves and nail polish (hand landmarks), jackets (body pose), shoes & socks (body pose: ankles, heels, toes).
 import { shade } from '../data.js';
 
 const v = (a, b) => ({ x: b.x - a.x, y: b.y - a.y });
@@ -28,6 +28,67 @@ export class Smoother {
     return this.prev;
   }
   reset() { this.prev = null; }
+}
+
+// ================================================================== NAIL POLISH
+// Paints a glossy nail on each fingertip. Landmarks: tip 4/8/12/16/20, DIP 3/7/11/15/19.
+// Nails sit on the BACK of the hand, so the caller tells us which way the hand faces.
+const NAIL = [ // [tip, dip, width factor, length factor]
+  [4, 3, 0.6, 0.62], [8, 7, 0.52, 0.6], [12, 11, 0.54, 0.6], [16, 15, 0.5, 0.58], [20, 19, 0.44, 0.56]];
+
+// Which side of the hand faces the camera: +1 back (nails visible), -1 palm, 0 edge-on.
+// `label` is MediaPipe's handedness ('Left' | 'Right'); the cross product's sign flips with chirality.
+export function handFacing(lmsNorm, w, h, label) {
+  const P = px(lmsNorm, w, h);
+  const a = v(P[0], P[5]), b = v(P[0], P[17]);
+  const cross = a.x * b.y - a.y * b.x;
+  const s2 = dist(P[0], P[9]) ** 2;
+  const k = cross / (s2 || 1);
+  if (Math.abs(k) < 0.08) return 0;
+  return (label === 'Left' ? -1 : 1) * Math.sign(k);
+}
+
+export function drawNails(ctx, lmsNorm, w, h, hex, fit, facing) {
+  const P = px(lmsNorm, w, h);
+  const s = dist(P[0], P[9]) * (fit.scale || 1);
+  const alpha = facing === 0 ? 0.75 : 0.96;
+  ctx.save();
+  for (const [ti, di, wf, lf] of NAIL) {
+    const T = P[ti], D = P[di];
+    const L = dist(T, D);
+    if (L < 3) continue;
+    const u = nrm(v(D, T)), sd = perp(u);
+    // nail width: from the finger segment, capped by palm size (segments look short when pointing at the camera)
+    const nw = Math.min(L * wf * 1.2, s * (ti === 4 ? 0.19 : 0.15) * (wf / 0.52));
+    const nl = Math.max(L * lf * 1.08, nw * 1.1);
+    const C = add(T, u, -(nl * 0.5 + L * 0.1));      // nail centre, just back from the fingertip
+    const ang = Math.atan2(u.y, u.x);
+    ctx.save();
+    ctx.translate(C.x, C.y); ctx.rotate(ang);         // local: +x toward the fingertip, y across the nail
+    const hl = nl / 2, hw = nw / 2;
+    const nailPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(-hl, -hw * 0.86);
+      ctx.quadraticCurveTo(-hl - hw * 0.35, 0, -hl, hw * 0.86);            // curved cuticle
+      ctx.lineTo(hl * 0.55, hw);
+      ctx.bezierCurveTo(hl * 1.02, hw * 0.98, hl * 1.08, -hw * 0.98, hl * 0.55, -hw); // rounded free edge
+      ctx.closePath();
+    };
+    // colour with curvature shading across the nail
+    const g = ctx.createLinearGradient(0, -hw, 0, hw);
+    g.addColorStop(0, shade(hex, -0.32)); g.addColorStop(0.3, hex); g.addColorStop(0.55, shade(hex, 0.12)); g.addColorStop(1, shade(hex, -0.38));
+    ctx.globalAlpha = alpha;
+    nailPath(); ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = Math.max(0.8, nw * 0.05); ctx.strokeStyle = shade(hex, -0.55); ctx.globalAlpha = alpha * 0.55; ctx.stroke();
+    // gel shine: long soft highlight plus a bright glint
+    ctx.globalAlpha = alpha;
+    const hg = ctx.createLinearGradient(-hl, 0, hl, 0);
+    hg.addColorStop(0, 'rgba(255,255,255,0)'); hg.addColorStop(0.35, 'rgba(255,255,255,.55)'); hg.addColorStop(1, 'rgba(255,255,255,.1)');
+    ctx.beginPath(); ctx.ellipse(hl * 0.05, -hw * 0.38, hl * 0.62, hw * 0.13, 0, 0, Math.PI * 2); ctx.fillStyle = hg; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(hl * 0.42, -hw * 0.3, hw * 0.12, hw * 0.08, 0, 0, Math.PI * 2); ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fill();
+    ctx.restore();
+  }
+  ctx.restore();
 }
 
 // ================================================================== GLOVES

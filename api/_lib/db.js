@@ -5,9 +5,9 @@ import { PRODUCTS } from '../../js/data.js';
 
 export const sql = neon(process.env.DATABASE_URL);
 
-export const CATEGORIES = { hats: 'head', sunglasses: 'face', jackets: 'body', gloves: 'hands', shoes: 'feet', socks: 'feet' };
+export const CATEGORIES = { hats: 'head', sunglasses: 'face', jackets: 'body', gloves: 'hands', shoes: 'feet', socks: 'feet', nails: 'hands' };
 export const MODELS = { hats: ['bucket', 'cap', 'beanie', 'slouchy', 'pompom', 'beret', 'fedora'], sunglasses: ['round', 'aviator', 'wayfarer', 'cateye'],
-  jackets: ['bomber', 'denim', 'puffer'], gloves: ['knit', 'leather', 'sport'], shoes: ['runner', 'hightop', 'loafer', 'slide'], socks: ['crew', 'stripe', 'ankle'] };
+  jackets: ['bomber', 'denim', 'puffer'], gloves: ['knit', 'leather', 'sport'], shoes: ['runner', 'hightop', 'loafer', 'slide'], socks: ['crew', 'stripe', 'ankle'], nails: ['polish'] };
 export const ORDER_STATUSES = ['Confirmed', 'Confirmed · pay on delivery', 'Packed', 'Shipped', 'Delivered', 'Cancelled'];
 export const FREE_SHIPPING = 5000, SHIPPING_FEE = 250;
 export const BASE_IDS = new Set(PRODUCTS.map(p => p.id));
